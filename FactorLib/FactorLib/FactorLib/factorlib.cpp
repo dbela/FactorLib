@@ -1,5 +1,7 @@
 #include "factorlib.h"
 #include <math.h>
+#include <chrono>
+#include <iostream>
 
 namespace FactorLib
 {
@@ -615,7 +617,7 @@ namespace FactorLib
 		const uLongLong size = 10000000;
 		const uLongLong baseSize = FactorBase.size() + 1 + FactorBase.size()/10;
 		std::vector<uLongLong> vecFactor;
-		std::vector<double> vecCheck(size);
+		std::vector<float> vecCheck(size);
 		mpz_t *arrSieve = new mpz_t[baseSize];
 
 		double Target   = (mpz_sizeinbase( n, 10 ) - 1 )/2 + log10(size);
@@ -717,10 +719,9 @@ namespace FactorLib
 						break;
 					}
 				}
-				mpz_clear(x);
 			}
-		}
-		
+			mpz_clear(x);
+		}	
 		mpz_clear( Square );
 		mpz_clear( FxFunction );
 		
@@ -858,8 +859,8 @@ namespace FactorLib
 				if( mpz_cmp_ui(tmpBase, B) <= 0 || mpz_cmp_ui( tmpBase2, B ) <= 0 )
 					FactorBase.push_back( (long)vecMillionPrimes[i] );
 			}
-			mpz_clear( tmpPrime );
-			mpz_clear( tmpBase );
+			mpz_clear( tmpPrime  );
+			mpz_clear( tmpBase   );
 			mpz_clear( tmpBase2  );
 			++i;
 		}
@@ -876,7 +877,7 @@ namespace FactorLib
 		
 		GetFactorBase( FactorBase, nMultiplier, B );
 		
-		int baseSize = FactorBase.size() + 1 + FactorBase.size()/10;
+		int baseSize = (int)(FactorBase.size() + 1 + FactorBase.size()/10);
 
 		std::vector<std::vector<uLongLong> > vecFactors;
 		std::vector<std::vector<int> > vecFactorsMod2;
@@ -885,7 +886,7 @@ namespace FactorLib
 		{
 			mpz_init( smoothBases[i] );
 		}
-		
+
 		mpz_t* smoothNumbers = SieveOfQ( smoothBases, vecFactors, FactorBase, nMultiplier, B );
 
 		vecFactorsMod2 = GetBinaryMatrix( vecFactors );
@@ -919,8 +920,8 @@ namespace FactorLib
 			mpz_sub( y, x, y );
 			mpz_add( x, x, tmp);
 
-			GCD( div1, x, nMultiplier );
-			GCD( div2, y, nMultiplier );
+			GCD( div1, x, n );
+			GCD( div2, y, n );
 
 			vecFactorsMod2.erase( vecFactorsMod2.begin() + index );
 
