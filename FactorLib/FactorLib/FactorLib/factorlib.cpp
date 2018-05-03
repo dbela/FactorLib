@@ -62,14 +62,22 @@ namespace FactorLib
 			if( array[i] == true )
 			{
 				primes.push_back(i);
-				for( uLongLong j = i*i; j < size; j += i )
+				for( uLongLong j = i*i; j < n; j += i )
 				{
 					array[j] = false;
 				}
 			}
 		}
-
-		for( uLongLong i = size; i < n ; ++i )
+		int start;
+		if( size % 2 == 0)
+		{
+			start = 1 ;
+		}
+		else
+		{
+			start = 0;
+		}
+		for( uLongLong i = size + start; i < n; i += 2 )
 		{
 			if( array[i] == true )
 			{
