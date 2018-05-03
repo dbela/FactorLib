@@ -604,7 +604,7 @@ namespace FactorLib
 		mpz_init( QuadraticEq1 );
 		mpz_init( QuadraticEq2 );
 	
-		const uLongLong size = 10000;
+		const uLongLong size = 10000000;
 		const uLongLong baseSize = FactorBase.size() + 1 + FactorBase.size()/10;
 		std::vector<uLongLong> vecFactor;
 		std::vector<double> vecCheck(size);
@@ -689,7 +689,6 @@ namespace FactorLib
 		for (uLongLong i = 0; i < size; ++i)
 		{
 			vecFactor.clear();
-
 			mpz_t x;
 			mpz_init( x );
 			mpz_add_ui( x, LowerBound, i + 1 );
@@ -869,20 +868,22 @@ namespace FactorLib
 		
 		GetFactorBase( FactorBase, nMultiplier, B );
 		
+		int baseSize = FactorBase.size() + 1 + FactorBase.size()/10;
+
 		std::vector<std::vector<uLongLong> > vecFactors;
 		std::vector<std::vector<int> > vecFactorsMod2;
-		mpz_t* smoothBases   = new mpz_t[ FactorBase.size() + 6 ];
-		for( int i = 0; i < FactorBase.size() + 6 ; ++i )
+		mpz_t* smoothBases   = new mpz_t[ baseSize ];
+		for( int i = 0; i < baseSize ; ++i )
 		{
 			mpz_init( smoothBases[i] );
 		}
 		
-		mpz_t* smoothNumbers = SieveOfQ( smoothBases, vecFactors, FactorBase, n, B );
+		mpz_t* smoothNumbers = SieveOfQ( smoothBases, vecFactors, FactorBase, nMultiplier, B );
 
 		vecFactorsMod2 = GetBinaryMatrix( vecFactors );
 
 		mpz_set_ui( div1, 1 );
-		while ( ( mpz_cmp_ui(div1, 1) == 0 || mpz_cmp(div1, n) == 0 ) && vecFactorsMod2.size() > FactorBase.size() )
+		while ( ( mpz_cmp_ui(div1, 1) == 0 || mpz_cmp(div1, nMultiplier) == 0 ) && vecFactorsMod2.size() > FactorBase.size() )
 		{
 			uLongLong index = BinaryGaussElimination( vecFactorsMod2);
 
@@ -904,14 +905,14 @@ namespace FactorLib
 				}
 			}
 			mpz_sqrt( y , y );
-			mpz_mod( y, y, n );
+			mpz_mod( y, y, nMultiplier );
 
 			mpz_set( tmp, y );
 			mpz_sub( y, x, y );
 			mpz_add( x, x, tmp);
 
-			GCD( div1, x, n );
-			GCD( div2, y, n );
+			GCD( div1, x, nMultiplier );
+			GCD( div2, y, nMultiplier );
 
 			vecFactorsMod2.erase( vecFactorsMod2.begin() + index );
 
