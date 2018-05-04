@@ -22,7 +22,7 @@ namespace FactorLib
 										          
 			static void                           Fermat( mpz_t a, mpz_t b, mpz_t n );
 										          
-			static void                           PollardRho( mpz_t divisor, mpz_t n, mpz_t c, unsigned int max );
+			static void                           PollardRho( mpz_t divisor, mpz_t n, unsigned int max );
 										          
 			static void                           Pminus( mpz_t ret, mpz_t n, mpz_t c, uLongLong max );
 										          

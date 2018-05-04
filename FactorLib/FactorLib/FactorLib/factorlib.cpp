@@ -1,6 +1,5 @@
 #include "factorlib.h"
 #include <math.h>
-#include <chrono>
 #include <iostream>
 
 namespace FactorLib
@@ -159,9 +158,9 @@ namespace FactorLib
 		{
 			if( mpz_cmp_ui( r, 0 ) > 0 )
 			{
-				while( mpz_cmp_ui( r, 0 ) < 0)
+				while( mpz_cmp_ui( r, 0 ) > 0)
 				{
-					mpz_mul( r, r, v );
+					mpz_sub( r, r, v );
 					mpz_add_ui( v, v, 2);
 				}
 			}
@@ -185,49 +184,58 @@ namespace FactorLib
 		mpz_clear( r );
 	}
 
-	void FactorLib::PollardRho( mpz_t divisor, mpz_t n, mpz_t c, unsigned int max )
+	void FactorLib::PollardRho( mpz_t divisor, mpz_t n, unsigned int max )
 	{
 		mpz_t x1, x2, product;
 		mpz_init( x1 );
 		mpz_init( x2 );
 		mpz_init( product );
-		unsigned int range = 1;
-		mpz_set_ui( x1, 2 );
-		mpz_set_ui( x2, 4);
-		mpz_add( x2, x2, c );
-		mpz_set_ui( product, 1 );
-		unsigned int terms = 0;
-
-		while( terms <= max )
+		mpz_set_ui( divisor, 1);
+		int c = 1;
+		unsigned int primeIndex = 0;
+		while( mpz_cmp_ui( divisor, 1) == 0 && primeIndex + 1 < vecMillionPrimes.size() )
 		{
-			for( unsigned int j = 0; j < range; ++j )
+			unsigned int range = 1;
+			unsigned int terms = 0;
+			mpz_set_ui( x1, 2 );
+			mpz_set_ui( x2, 4);
+			mpz_add_ui( x2, x2, c );
+			mpz_set_ui( product, 1 );
+			while( terms <= max )
 			{
-				 mpz_powm_ui( x2, x2, 2, n );
-				 mpz_add( x2, x2, c );
-				 mpz_mod( x2, x2, n);
-				 mpz_submul( product, x1, x2 );
-				 mpz_mod( product, product, n );
-				 terms++;
-				 if( terms % 10 == 0 )
-				 {
-					GCD( divisor, n, product );
-					if( mpz_cmp_ui( divisor, 1 ) > 0  )
-					{
-						return;
-					}
-					mpz_set_ui( product, 1 );
-				 }
+				for( unsigned int j = 0; j < range; ++j )
+				{
+					 mpz_powm_ui( x2, x2, 2, n );
+					 mpz_add_ui( x2, x2, c );
+					 mpz_mod( x2, x2, n);
+					 mpz_submul( product, x1, x2 );
+					 mpz_mod( product, product, n );
+					 terms++;
+					 if( terms % 10 == 0 )
+					 {
+						GCD( divisor, n, product );
+						if( mpz_cmp_ui( divisor, 1 ) > 0  )
+						{
+							mpz_clear( x1 );
+							mpz_clear( x2 );
+							mpz_clear( product );
+							return;
+						}
+						mpz_set_ui( product, 1 );
+					 }
+				}
+				mpz_set( x1, x2 );
+				range = range * 2;
+				for( unsigned int j = 0; j < range; ++j )
+				{
+					mpz_powm_ui( x2, x2, 2, n );
+					mpz_add_ui( x2, x2, c );
+					mpz_mod( x2, x2, n);
+				}
 			}
-			mpz_set( x1, x2 );
-			range = range * 2;
-			for( unsigned int j = 0; j < range; ++j )
-			{
-				mpz_powm_ui( x2, x2, 2, n );
-				mpz_add( x2, x2, c );
-				mpz_mod( x2, x2, n);
-			}
+			c = (int)vecMillionPrimes[primeIndex];
+			primeIndex++;
 		}
-
 		mpz_clear( x1 );
 		mpz_clear( x2 );
 		mpz_clear( product );
@@ -718,10 +726,10 @@ namespace FactorLib
 						mpz_clear(x);
 						break;
 					}
-				}
+				}				
 			}
 			mpz_clear(x);
-		}	
+		}
 		mpz_clear( Square );
 		mpz_clear( FxFunction );
 		
