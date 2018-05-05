@@ -115,9 +115,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\FactorLib\FactorLib;$(SolutionDir)..\mpir;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>$(SolutionDir)..\FactorLib\x64\Debug\factorlib.lib;$(SolutionDir)..\mpir\lib\x64\Release\mpir.lib;$(SolutionDir)..\mpir\lib\x64\Release\mpirxx.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
