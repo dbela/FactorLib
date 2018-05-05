@@ -18,6 +18,14 @@ namespace FactorLib
 			 							          
 			static std::vector<uLongLong>         SieveOfE( uLongLong n );
 										          
+			static void                           ModExpoForBigNum( mpz_t ret, mpz_t a, mpz_t b, mpz_t mod );
+
+			static uLongLong                      ModExpo( uLongLong a, uLongLong b, uLongLong mod );
+			
+			static uLongLong                      SPRP( uLongLong n, uLongLong b );
+
+			static bool                           DeterministicRabinMillerPrimeTest( uLongLong n );
+			
 			static std::vector<uLongLong>         TrialDiv( uLongLong n );
 										          
 			static void                           Fermat( mpz_t a, mpz_t b, mpz_t n );
@@ -25,9 +33,7 @@ namespace FactorLib
 			static void                           PollardRho( mpz_t divisor, mpz_t n, unsigned int max );
 										          
 			static void                           Pminus( mpz_t ret, mpz_t n, mpz_t c, uLongLong max );
-										          
-			static void                           ModExpo( mpz_t ret, mpz_t a, mpz_t b, mpz_t mod );
-										          
+										          							          
 			static bool                           EulerCriterion( mpz_t n, mpz_t mod);
 										          
 			static uLongLong                      LesserPrimesCount( uLongLong n );

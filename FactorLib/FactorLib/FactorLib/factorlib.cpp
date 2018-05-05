@@ -29,21 +29,30 @@ namespace FactorLib
 		mpz_clear( tmpSwap );
 	}
 
-	void FactorLib::ModExpo( mpz_t ret, mpz_t a, mpz_t b, mpz_t mod )
+	void FactorLib::ModExpoForBigNum( mpz_t ret, mpz_t a, mpz_t b, mpz_t mod )
 	{
+		mpz_t base;
+		mpz_t power;
+		mpz_init( base  );
+		mpz_init( power );
 
+		mpz_set( base,  a );
+		mpz_set( power, b );
 		mpz_set_ui( ret, 1 );
-		while( mpz_cmp_ui( b, 0 ) != 0 )
+		while( mpz_cmp_ui( power, 0 ) != 0 )
 		{
-			if( mpz_odd_p( b ) != 0 )
+			if( mpz_odd_p( power ) != 0 )
 			{
-				mpz_mul( ret, ret, a );
+				mpz_mul( ret, ret, base   );
 				mpz_mod( ret, ret, mod );
 			}
-			mpz_fdiv_q_ui( b, b, 2 );
-			mpz_mul( a, a, a );
-			mpz_mod( a, a, mod );
+			mpz_fdiv_q_ui( power, power, 2 );
+			mpz_mul( base, base, base );
+			mpz_mod( base, base, mod  );
 		}
+
+		mpz_clear( base  );
+		mpz_clear( power );
 	}
 
 	std::vector<uLongLong> FactorLib::SieveOfE( uLongLong n )
@@ -87,6 +96,83 @@ namespace FactorLib
 		}
 
 		return primes;
+	}
+
+	uLongLong FactorLib::ModExpo( uLongLong a, uLongLong b, uLongLong mod )
+	{
+		uLongLong length = sizeof( uLongLong ) * CHAR_BIT;
+		const uLongLong hibit = 1llu << ( length-1 );
+
+		while( ( hibit & b ) == 0 ) 
+		{ 
+			b <<= 1; 
+			length--; 
+		}
+	    b <<= 1; 
+		length--;
+
+        uLongLong p = a; // product
+        while( length )
+		{
+         p = ( p * p ) % mod;
+         if( b & hibit ) 
+			 p = ( p * a ) % mod;
+         b <<= 1; 
+		 length--;
+        }
+        return p;
+	}
+
+	uLongLong FactorLib::SPRP( uLongLong n, uLongLong b )
+	{
+		if( n == 2 || n == 3 ) 
+			return n;
+		if( ( n & 1 ) == 0 || n == 1 ) 
+			return 0;
+		uLongLong m = n - 1, nm = n - 1;
+        uLongLong k = 0;
+        while( ( m & 1 ) == 0 ) 
+		{ 
+			m >>= 1; 
+			k++; 
+		}
+
+        uLongLong x = ModExpo( b, m, n );
+        if( x == 1 || x == n-1 ) 
+			return n;
+        while( k )
+		{
+			x = ( x * x ) % n;
+			if( x == n - 1 ) 
+				return n;
+			if( x == 1 ) 
+				return 0;
+			k--;
+        }
+        return 0;
+	}
+
+	bool FactorLib::DeterministicRabinMillerPrimeTest( uLongLong n )
+	{
+		uLongLong base[]       = { 2,3,5,7,11,13,17,19,23,29,31 };
+        uLongLong baseLength   = sizeof( base ) / sizeof( *base );
+        uLongLong primeLimits[]=
+		{ 
+			2047ul, 1373653ul, 25326001ul, 3215031751ul, 2152302898747ul,
+			3474749660383ul, 341550071728321ul, 341550071728321ul,
+            825123056546413051ul, 3825123056546413051ul, 3825123056546413051ul 
+		};
+
+        uLongLong primeLimitsLength = sizeof( primeLimits ) / sizeof( *primeLimits );
+        for( uLongLong i = 0; i < baseLength; i++ )
+		{
+          if( SPRP( n, base[i] ) == 0 ) 
+			  return false;
+          if( n < primeLimits[i] ) 
+			  return true;
+        }
+        std::cout << "Not for sure." << std::endl;
+        return true;
 	}
 
 	std::vector<uLongLong> FactorLib::TrialDiv( uLongLong n )
@@ -245,24 +331,29 @@ namespace FactorLib
 
 	void FactorLib::Pminus( mpz_t ret, mpz_t n, mpz_t c, uLongLong max )
 	{
-		mpz_t pos, tmpGCD;
+		mpz_t pos, tmpGCD, exp;
 		mpz_init( pos );
 		mpz_init( tmpGCD );
+		mpz_init( exp );
+
+		mpz_set( exp, c );
 		for( uLongLong i = 0; i < max; ++i )
 		{
-			mpz_set_ui( pos, i );
-			ModExpo( c, c, pos, n );
-			if( i % 10 == 0 )
+			mpz_set_ui( pos, i+1 );
+			ModExpoForBigNum( exp, c, pos, n );
+			if( (i+1) % 10 == 0 )
 			{
-				mpz_sub_ui( tmpGCD, c, 1 );
+				mpz_sub_ui( tmpGCD, exp, 1 );
 				GCD( ret, tmpGCD, n );
 				if( mpz_cmp_ui( ret, 1 ) > 0 )
 				{
 					return;
 				}
 			}
+			mpz_set( c, exp );
 		}
 
+		mpz_clear( exp );
 		mpz_clear( pos );
 		mpz_clear( tmpGCD );
 		mpz_set( ret, n );	
@@ -726,10 +817,10 @@ namespace FactorLib
 						mpz_clear(x);
 						break;
 					}
-				}				
+				}		
 			}
 			mpz_clear(x);
-		}
+		}	
 		mpz_clear( Square );
 		mpz_clear( FxFunction );
 		
@@ -896,14 +987,14 @@ namespace FactorLib
 		}
 
 		mpz_t* smoothNumbers = SieveOfQ( smoothBases, vecFactors, FactorBase, nMultiplier, B );
-
+		
 		vecFactorsMod2 = GetBinaryMatrix( vecFactors );
 
 		mpz_set_ui( div1, 1 );
 		while ( ( mpz_cmp_ui(div1, 1) == 0 || mpz_cmp(div1, nMultiplier) == 0 ) && vecFactorsMod2.size() > FactorBase.size() )
 		{
 			uLongLong index = BinaryGaussElimination( vecFactorsMod2);
-
+			
 			mpz_t x, y, tmp;
 			mpz_init( y );
 			mpz_init( x );
