@@ -1,9 +1,12 @@
 #include "factorlib.h"
 #include <math.h>
+#include <chrono>
 #include <iostream>
+
 
 namespace FactorLib
 {
+
 	void FactorLib::GCD( mpz_t out, mpz_t a, mpz_t b )
 	{
 		mpz_t tmpA, tmpB, tmpSwap;
@@ -29,7 +32,7 @@ namespace FactorLib
 		mpz_clear( tmpSwap );
 	}
 
-	void FactorLib::ModExpoForBigNum( mpz_t ret, mpz_t a, mpz_t b, mpz_t mod )
+	void FactorLib::ModExpo( mpz_t ret, mpz_t a, mpz_t b, mpz_t mod )
 	{
 		mpz_t base;
 		mpz_t power;
@@ -57,13 +60,18 @@ namespace FactorLib
 
 	std::vector<uLongLong> FactorLib::SieveOfE( uLongLong n )
 	{
+		std::vector<uLongLong> primes;
+		if( n == 1 )
+		{
+			return primes;
+		}
 		uLongLong size = (uLongLong)ceil( sqrt( n ) );
 		bool *array = new bool[n];
 		for( uLongLong i = 0; i < n; ++i )
 		{
 			array[i] = true;
 		}
-		std::vector<uLongLong> primes;
+		
 		
 		primes.push_back(2);
 
@@ -98,31 +106,6 @@ namespace FactorLib
 		return primes;
 	}
 
-	uLongLong FactorLib::ModExpo( uLongLong a, uLongLong b, uLongLong mod )
-	{
-		uLongLong length = sizeof( uLongLong ) * CHAR_BIT;
-		const uLongLong hibit = 1llu << ( length-1 );
-
-		while( ( hibit & b ) == 0 ) 
-		{ 
-			b <<= 1; 
-			length--; 
-		}
-	    b <<= 1; 
-		length--;
-
-        uLongLong p = a; // product
-        while( length )
-		{
-         p = ( p * p ) % mod;
-         if( b & hibit ) 
-			 p = ( p * a ) % mod;
-         b <<= 1; 
-		 length--;
-        }
-        return p;
-	}
-
 	uLongLong FactorLib::SPRP( uLongLong n, uLongLong b )
 	{
 		if( n == 2 || n == 3 ) 
@@ -136,8 +119,23 @@ namespace FactorLib
 			m >>= 1; 
 			k++; 
 		}
+		mpz_t tx, tb, tm, tn;
+		mpz_init( tx );
+		mpz_init( tb );
+		mpz_init( tm );
+		mpz_init( tn );
 
-        uLongLong x = ModExpo( b, m, n );
+		mpz_set_ui( tb, b);
+		mpz_set_ui( tm, m);
+		mpz_set_ui( tn, n);
+		ModExpo( tx, tb, tm, tn );
+        uLongLong x = mpz_get_ui( tx );
+
+		mpz_clear( tx );
+		mpz_clear( tb );
+		mpz_clear( tm );
+		mpz_clear( tn );
+
         if( x == 1 || x == n-1 ) 
 			return n;
         while( k )
@@ -174,59 +172,64 @@ namespace FactorLib
         std::cout << "Not for sure." << std::endl;
         return true;
 	}
-
-	std::vector<uLongLong> FactorLib::TrialDiv( uLongLong n )
-	{
-		std::vector<uLongLong> factors;
-		
+	
+	void FactorLib::TrialDiv( uLongLong n, factorMap &factors )
+	{	
 		if( n > 1000000 )
-			return factors;
+			return;
 
 
 		uLongLong d;
-		for( d = 2; d <= 3; ++d )
+		for( uLongLong i = 0; i < vecMillionPrimes.size(); ++i )
 		{
+			d = vecMillionPrimes[i];
+			
+			if( n == 1 || d*d > n )
+				break;
+
 			uLongLong e = 0;
 			while( n % d == 0)
 			{
 				n = n / d;
 				e++;
 			}
-			for( uLongLong i = 0; i < e; ++i )
+			if( e > 0 )
 			{
-				factors.push_back(d);
-			}
-		}
-
-		d = 5;
-		uLongLong add = 2;
-
-		while( d*d <= n )
-		{
-			uLongLong e = 0;
-			while( n % d == 0)
-			{
-				n = n / d;
-				e++;
-			}
-			for( uLongLong i = 0; i < e; ++i )
-			{
-				factors.push_back(d);
-			}
-
-			d += add;
+				std::string num = std::to_string( d );
+				if( factors.find( num ) != factors.end() )
+				{
+					factors[num] += e;
+				}
+				else
+				{
+					factors[num] = e;
+				}
+			}				
 		}
 		
 		if( n != 1 && d*d > n)
 		{
-			factors.push_back( n );
+			std::string num = std::to_string( n );
+			if( factors.find( num ) != factors.end() )
+			{
+				factors[num] += 1;
+			}
+			else
+			{
+				factors[num] = 1;
+			}
 		}
-
-		return factors;
 	}
 
 	void FactorLib::Fermat( mpz_t a, mpz_t b, mpz_t n )
 	{
+		if( mpz_even_p( n ) != 0 )
+		{
+			mpz_set_ui( a, 2    );
+			mpz_div_ui( b, n, 2 );
+			return;
+		}
+
 		mpz_t sqrt, u, v, r;
 		mpz_init( sqrt );
 		mpz_init( u );
@@ -272,6 +275,12 @@ namespace FactorLib
 
 	void FactorLib::PollardRho( mpz_t divisor, mpz_t n, unsigned int max )
 	{
+		if( mpz_even_p( n ) != 0 )
+		{
+			mpz_set_ui( divisor, 2 );
+			return;
+		}
+
 		mpz_t x1, x2, product;
 		mpz_init( x1 );
 		mpz_init( x2 );
@@ -279,7 +288,7 @@ namespace FactorLib
 		mpz_set_ui( divisor, 1);
 		int c = 1;
 		unsigned int primeIndex = 0;
-		while( mpz_cmp_ui( divisor, 1) == 0 && primeIndex + 1 < vecMillionPrimes.size() )
+		while( mpz_cmp_ui( divisor, 1) == 0 && primeIndex + 1 < max )
 		{
 			unsigned int range = 1;
 			unsigned int terms = 0;
@@ -329,18 +338,26 @@ namespace FactorLib
 
 	}
 
-	void FactorLib::Pminus( mpz_t ret, mpz_t n, mpz_t c, uLongLong max )
+	void FactorLib::Pminus( mpz_t ret, mpz_t n, uLongLong max )
 	{
-		mpz_t pos, tmpGCD, exp;
+		if( mpz_even_p( n ) != 0 )
+		{
+			mpz_set_ui( ret, 2 );
+			return;
+		}
+
+		mpz_t pos, c, tmpGCD, exp;
 		mpz_init( pos );
 		mpz_init( tmpGCD );
 		mpz_init( exp );
+		mpz_init( c );
 
+		mpz_set_ui( c, 2 );
 		mpz_set( exp, c );
 		for( uLongLong i = 0; i < max; ++i )
 		{
 			mpz_set_ui( pos, i+1 );
-			ModExpoForBigNum( exp, c, pos, n );
+			ModExpo( exp, c, pos, n );
 			if( (i+1) % 10 == 0 )
 			{
 				mpz_sub_ui( tmpGCD, exp, 1 );
@@ -356,6 +373,7 @@ namespace FactorLib
 		mpz_clear( exp );
 		mpz_clear( pos );
 		mpz_clear( tmpGCD );
+		mpz_clear( c );
 		mpz_set( ret, n );	
 	}
 
@@ -713,7 +731,7 @@ namespace FactorLib
 		mpz_init( QuadraticEq1 );
 		mpz_init( QuadraticEq2 );
 	
-		const uLongLong size = 10000000;
+		const uLongLong size = 1000000000;
 		const uLongLong baseSize = FactorBase.size() + 1 + FactorBase.size()/10;
 		std::vector<uLongLong> vecFactor;
 		std::vector<float> vecCheck(size);
@@ -747,7 +765,7 @@ namespace FactorLib
 		}
 		for( int i = 0; Start + 2 * i < size; ++i )
 		{
-			vecCheck[ Start + 2*i ] += log10(8);
+			vecCheck[ Start + 2*i ] += (float)log10(8);
 		}
 
 		for( uLongLong i = 2; i < FactorBase.size(); ++i )
@@ -783,17 +801,19 @@ namespace FactorLib
 				
 			for (uLongLong j = 0; j*primeBase + Start1 - 1< size; ++j)
 			{
-				vecCheck[j*primeBase + Start1 - 1] += log10(primeBase);
+				vecCheck[j*primeBase + Start1 - 1] += (float)log10(primeBase);
 			}
 
 			for (uLongLong j = 0; j*primeBase + Start2 - 1 < size; ++j)
 			{
-				vecCheck[j*primeBase + Start2 -1 ] += log10(primeBase);
+				vecCheck[j*primeBase + Start2 -1 ] += (float)log10(primeBase);
 			}
 
 			mpz_clear(tmpPrime);
 			mpz_clear(tmpMod);
 		}
+
+		std::chrono::high_resolution_clock::time_point t3 = std::chrono::high_resolution_clock::now();
 
 		for (uLongLong i = 0; i < size; ++i)
 		{
@@ -817,10 +837,16 @@ namespace FactorLib
 						mpz_clear(x);
 						break;
 					}
-				}		
+				}
+				
 			}
 			mpz_clear(x);
-		}	
+		}
+
+		std::chrono::high_resolution_clock::time_point t4 = std::chrono::high_resolution_clock::now();
+		auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>( t4 - t3 ).count();
+		std::cout << "CanFactor" << duration2 << std::endl;
+		
 		mpz_clear( Square );
 		mpz_clear( FxFunction );
 		
@@ -967,6 +993,13 @@ namespace FactorLib
 
 	void FactorLib::QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong B )
 	{
+		if( mpz_even_p( n ) != 0 )
+		{
+			mpz_set_ui( div1, 2    );
+			mpz_div_ui( div2, n, 2 );
+			return;
+		}
+
 		mpz_t nMultiplier;
 		mpz_init( nMultiplier );
 
@@ -986,15 +1019,27 @@ namespace FactorLib
 			mpz_init( smoothBases[i] );
 		}
 
+		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
 		mpz_t* smoothNumbers = SieveOfQ( smoothBases, vecFactors, FactorBase, nMultiplier, B );
-		
+
+		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+		std::cout << "Sieve" << duration << std::endl;
+
 		vecFactorsMod2 = GetBinaryMatrix( vecFactors );
 
 		mpz_set_ui( div1, 1 );
 		while ( ( mpz_cmp_ui(div1, 1) == 0 || mpz_cmp(div1, nMultiplier) == 0 ) && vecFactorsMod2.size() > FactorBase.size() )
 		{
+			std::chrono::high_resolution_clock::time_point t3 = std::chrono::high_resolution_clock::now();
+
 			uLongLong index = BinaryGaussElimination( vecFactorsMod2);
-			
+
+			std::chrono::high_resolution_clock::time_point t4 = std::chrono::high_resolution_clock::now();
+			auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>( t4 - t3 ).count();
+			std::cout << "Gauss" << duration2 << std::endl;
+
 			mpz_t x, y, tmp;
 			mpz_init( y );
 			mpz_init( x );
@@ -1038,5 +1083,294 @@ namespace FactorLib
 
 		
 		mpz_clear( nMultiplier );
+	}
+
+	void FactorLib::Factorize( mpz_t n, factorMap &factors )
+	{
+		int pow2 = 0;
+		while( mpz_even_p( n ) != 0 )
+		{
+			mpz_div_ui( n, n, 2 );
+			pow2++;
+		}
+		if( pow2 > 0 )
+		{
+			factors["2"] = pow2;
+		}
+
+		int size = (int)mpz_sizeinbase( n, 10 );
+
+		if( size > 19 )
+		{	
+			mpz_t div1; 
+			mpz_t div2; 
+			mpz_init( div1 );
+			mpz_init( div2 );
+			QuadraticSieve( div1, div2, n, 1000 );
+
+			if( mpz_cmp( div1, n ) == 0 )
+			{
+				char* chDiv = new char[mpz_sizeinbase( n, 10 )];
+				mpz_get_str( chDiv, 10, n );
+				std::string strDiv(chDiv);
+				
+				if( factors.find( strDiv ) != factors.end() )
+				{
+					factors[ strDiv ] += 1;
+				}
+				else
+				{
+					factors[ strDiv ] = 1;
+				}
+				mpz_clear( div1 );
+				mpz_clear( div2 );
+			}
+			Factorize( div1, factors );
+			Factorize( div2, factors );
+
+			mpz_clear( div1 );
+			mpz_clear( div2 );
+
+		}
+		else
+		{
+			uLongLong ullN = mpz_get_ui( n );
+			if( DeterministicRabinMillerPrimeTest( ullN ) )
+			{
+				std::string strDiv = std::to_string( ullN );
+				
+				if( factors.find( strDiv ) != factors.end() )
+				{
+					factors[ strDiv ] += 1;
+				}
+				else
+				{
+					factors[ strDiv ] = 1;
+				}
+			}
+			else
+			{
+				if( ullN > 10000 )
+				{
+					mpz_t div1; 
+					mpz_t div2; 
+					mpz_init( div1 );
+					mpz_init( div2 );
+					
+					PollardRho( div1, n, 10000 );
+					mpz_div( div2, n, div1 );
+
+					Factorize( div1, factors );
+					Factorize( div2, factors );
+					
+					mpz_clear( div1 );
+					mpz_clear( div2 );
+				}
+				else
+				{
+					TrialDiv( ullN, factors );
+				}
+			}
+		}
+	}
+
+	std::string FactorLib::RunFermat( std::string strNum )
+	{
+		
+		mpz_t n, div1, div2;
+		mpz_init( n    );
+		mpz_init( div1 );
+		mpz_init( div2 );
+
+		mpz_set_str( n, strNum.c_str(), 10 );
+		
+		Fermat( div1, div2, n );
+
+		char* chDiv1 = new char[mpz_sizeinbase( div1, 10 )];
+		char* chDiv2 = new char[mpz_sizeinbase( div2, 10 )];
+		mpz_get_str( chDiv1, 10, div1 );
+		mpz_get_str( chDiv2, 10, div2 );
+
+		mpz_clear( n    );
+		mpz_clear( div1 );
+		mpz_clear( div2 );
+		if( chDiv1 == "1" || chDiv2 == "1" )
+		{
+			return "A(z) " + strNum + " szám prím.";
+		}
+		else
+		{
+			return strNum + " = " + std::string( chDiv1 ) + " * " + std::string( chDiv2 );
+		}
+		
+	}
+
+	std::string FactorLib::RunPMinus( std::string strNum )
+	{
+		std::string resMsg, strDiv1, strDiv2;
+		mpz_t n, div1, div2;
+		mpz_init( n    );
+		mpz_init( div1 );
+		mpz_init( div2 );
+
+		mpz_set_str( n, strNum.c_str(), 10 );
+
+		Pminus( div1, n, 10000);
+
+		char* chDiv1 = new char[mpz_sizeinbase( div1, 10 )];
+		char* chDiv2 = new char[mpz_sizeinbase( div2, 10 )];
+		mpz_get_str( chDiv1, 10, div1 );
+		mpz_get_str( chDiv2, 10, div2 );
+
+		mpz_clear( n    );
+		mpz_clear( div1 );
+		mpz_clear( div2 );
+		if( chDiv1 == "1" || chDiv2 == "1" )
+		{
+			return "A(z) " + strNum + " szám prím.";
+		}
+		else
+		{
+			return strNum + " = " + std::string( chDiv1 ) + " * " + std::string( chDiv2 );
+		}
+	}
+
+	std::string FactorLib::RunPollardRho( std::string strNum )
+	{
+		std::string resMsg, strDiv1, strDiv2;
+		mpz_t n, div1, div2;
+		mpz_init( n    );
+		mpz_init( div1 );
+		mpz_init( div2 );
+
+		mpz_set_str( n, strNum.c_str(), 10 );
+
+		PollardRho( div1, n, 10000);
+		mpz_div( div2, n, div1 );
+
+		char* chDiv1 = new char[mpz_sizeinbase( div1, 10 )];
+		char* chDiv2 = new char[mpz_sizeinbase( div2, 10 )];
+		mpz_get_str( chDiv1, 10, div1 );
+		mpz_get_str( chDiv2, 10, div2 );
+
+		mpz_clear( n    );
+		mpz_clear( div1 );
+		mpz_clear( div2 );
+		if( chDiv1 == "1" || chDiv2 == "1" )
+		{
+			return "A(z) " + strNum + " szám prím.";
+		}
+		else
+		{
+			return strNum + " = " + std::string( chDiv1 ) + " * " + std::string( chDiv2 );
+		}
+	}
+	
+	std::string FactorLib::RunQuadraticSieve( std::string strNum )
+	{
+		std::string resMsg, strDiv1, strDiv2;
+		mpz_t n, div1, div2;
+		mpz_init( n    );
+		mpz_init( div1 );
+		mpz_init( div2 );
+
+		mpz_set_str( n, strNum.c_str(), 10 );
+
+		QuadraticSieve( div1, div2, n, 1000 );
+
+		char* chDiv1 = new char[mpz_sizeinbase( div1, 10 )];
+		char* chDiv2 = new char[mpz_sizeinbase( div2, 10 )];
+		mpz_get_str( chDiv1, 10, div1 );
+		mpz_get_str( chDiv2, 10, div2 );
+
+		mpz_clear( n    );
+		mpz_clear( div1 );
+		mpz_clear( div2 );
+		if( chDiv1 == "1" || chDiv2 == "1" )
+		{
+			return "A(z) " + strNum + " szám prím.";
+		}
+		else
+		{
+			return strNum + " = " + std::string( chDiv1 ) + " * " + std::string( chDiv2 );
+		}
+	}
+
+	std::string FactorLib::RunPrimeTest( std::string strNum )
+	{
+		mpz_t( n );
+		mpz_init( n );
+		mpz_set_str( n, strNum.c_str(), 10 );
+		bool badNum = (mpz_cmp_ui( n, ULLONG_MAX ) > 0 );
+		mpz_clear( n );
+		if( badNum )
+		{
+			return "A szám meghaladja a megadott határértéket.";
+		}
+		else
+		{
+			uLongLong n = std::stoull( strNum );
+			if( DeterministicRabinMillerPrimeTest( n ) )
+			{
+				return "A(z) " + strNum + " szám prím.";
+			}
+			else
+			{
+				return "A(z) " + strNum + " szám nem prím.";
+			}
+		}
+	}
+
+	std::string FactorLib::RunFactorize( std::string strNum )
+	{
+		factorMap factors;
+
+		if( strNum.length() > 40 )
+		{
+			return "A szám túl nagy";
+		}
+
+		std::string resultMsg;
+		mpz_t n;
+		mpz_init( n );
+
+		Factorize( n, factors );
+
+		for( auto it = factors.begin(); it != factors.end(); ++it )
+		{
+			if( it != factors.begin() )
+				resultMsg += " * ";
+			std::string power = std::to_string( it->second );
+			if( power != "1" )
+			{
+				resultMsg += it->first + "^" + power;
+			}
+			else
+			{
+				resultMsg += it->first;
+			}
+		}
+		mpz_clear( n );
+		return resultMsg;
+	}
+
+	std::vector<uLongLong> FactorLib::RunSieveOfE( std::string strNum )
+	{
+		mpz_t( n );
+		mpz_init( n );
+		mpz_set_str( n, strNum.c_str(), 10 );
+		bool badNum = (mpz_cmp_ui( n, ULLONG_MAX ) > 0 );
+		mpz_clear( n );
+
+		if( badNum )
+		{
+			std::vector<uLongLong> primes;
+			return primes;
+		}
+		else
+		{
+			uLongLong n = std::stoull( strNum );
+			return SieveOfE( n );
+		}
 	}
 }

@@ -5,11 +5,50 @@
 
 #include "mpir.h"
 #include <vector>
+#include <map>
+#include <string>
 
-typedef unsigned long long uLongLong;
+
+
+
+
+
+
 
 namespace FactorLib
 {
+	static bool CompFactorMap( std::string a, std::string b )
+	{
+		if( a.length() != b.length() )
+		{
+			return a.length() < b.length();
+		}
+		else
+		{
+			for( int i = 0; i < a.length(); ++i )
+			{
+				if( a[i] != b[i] )
+				{
+					return a[i] < b[i];
+				}
+			}
+		}
+		return true;
+	}
+
+	struct FactorMapCmp 
+	{
+		bool operator()(std::string a, std::string b) const
+		{
+			return CompFactorMap(a, b);
+		}
+	};
+
+	typedef unsigned long long uLongLong;
+
+	typedef std::map<std::string, uLongLong, FactorMapCmp> factorMap;
+
+
 	class FactorLib
 	{
 		public:
@@ -18,21 +57,19 @@ namespace FactorLib
 			 							          
 			static std::vector<uLongLong>         SieveOfE( uLongLong n );
 										          
-			static void                           ModExpoForBigNum( mpz_t ret, mpz_t a, mpz_t b, mpz_t mod );
-
-			static uLongLong                      ModExpo( uLongLong a, uLongLong b, uLongLong mod );
+			static void                           ModExpo( mpz_t ret, mpz_t a, mpz_t b, mpz_t mod );
 			
 			static uLongLong                      SPRP( uLongLong n, uLongLong b );
 
 			static bool                           DeterministicRabinMillerPrimeTest( uLongLong n );
 			
-			static std::vector<uLongLong>         TrialDiv( uLongLong n );
+			static void                           TrialDiv( uLongLong n, factorMap &factors );
 										          
 			static void                           Fermat( mpz_t a, mpz_t b, mpz_t n );
 										          
 			static void                           PollardRho( mpz_t divisor, mpz_t n, unsigned int max );
 										          
-			static void                           Pminus( mpz_t ret, mpz_t n, mpz_t c, uLongLong max );
+			static void                           Pminus( mpz_t ret, mpz_t n, uLongLong max );
 										          							          
 			static bool                           EulerCriterion( mpz_t n, mpz_t mod);
 										          
@@ -68,6 +105,21 @@ namespace FactorLib
 										          
 			static void                           QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong B );
 
+			static void                           Factorize( mpz_t n, factorMap &factors );
+			
+			static std::string                    RunFactorize( std::string strNum );
+
+			static std::string                    RunFermat( std::string strNum );
+
+			static std::string                    RunPMinus( std::string strNum );
+
+			static std::string                    RunPollardRho( std::string strNum );
+
+			static std::string                    RunQuadraticSieve( std::string strNum );
+
+			static std::string                    RunPrimeTest( std::string strNum );
+
+			static std::vector<uLongLong>         RunSieveOfE( std::string strNum );
 	};
 
 	static std::vector<unsigned long long> vecMillionPrimes = FactorLib::SieveOfE(1000000);
