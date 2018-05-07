@@ -3,6 +3,7 @@
 #include <chrono>
 #include <iostream>
 
+int iSmoothNumbersArraySize;
 
 namespace FactorLib
 {
@@ -129,24 +130,35 @@ namespace FactorLib
 		mpz_set_ui( tm, m);
 		mpz_set_ui( tn, n);
 		ModExpo( tx, tb, tm, tn );
-        uLongLong x = mpz_get_ui( tx );
 
-		mpz_clear( tx );
 		mpz_clear( tb );
 		mpz_clear( tm );
-		mpz_clear( tn );
 
-        if( x == 1 || x == n-1 ) 
+        uLongLong x = mpz_get_ui( tx );
+
+        if( x == 1 || x == n - 1 ) 
 			return n;
         while( k )
 		{
-			x = ( x * x ) % n;
+			mpz_mul( tx, tx, tx );
+			mpz_mod( tx, tx, tn );
+			x = mpz_get_ui( tx );
 			if( x == n - 1 ) 
+			{
+				mpz_clear( tx );
+				mpz_clear( tn );
 				return n;
+			}
 			if( x == 1 ) 
+			{
+				mpz_clear( tx );
+				mpz_clear( tn );
 				return 0;
+			}
 			k--;
         }
+		mpz_clear( tx );
+		mpz_clear( tn );
         return 0;
 	}
 
@@ -273,14 +285,14 @@ namespace FactorLib
 		mpz_clear( r );
 	}
 
-	void FactorLib::PollardRho( mpz_t divisor, mpz_t n, unsigned int max )
+	void FactorLib::PollardRho( mpz_t divisor, mpz_t n )
 	{
 		if( mpz_even_p( n ) != 0 )
 		{
 			mpz_set_ui( divisor, 2 );
 			return;
 		}
-
+		unsigned int max = 10000;
 		mpz_t x1, x2, product;
 		mpz_init( x1 );
 		mpz_init( x2 );
@@ -338,14 +350,14 @@ namespace FactorLib
 
 	}
 
-	void FactorLib::Pminus( mpz_t ret, mpz_t n, uLongLong max )
+	void FactorLib::Pminus( mpz_t ret, mpz_t n )
 	{
 		if( mpz_even_p( n ) != 0 )
 		{
 			mpz_set_ui( ret, 2 );
 			return;
 		}
-
+		unsigned int max = 10000;
 		mpz_t pos, c, tmpGCD, exp;
 		mpz_init( pos );
 		mpz_init( tmpGCD );
@@ -416,119 +428,6 @@ namespace FactorLib
 			std::vector<uLongLong> primes = SieveOfE( n );
 			return primes.size();
 		}
-	}
-
-	void FactorLib::SeqV( mpz_t ret, mpz_t h, mpz_t n, uLongLong i )
-	{
-		if( i = 1 )
-		{
-			mpz_set( ret, h );
-		}
-		else if( i = 2 )
-		{
-			mpz_t tmpMul;
-			mpz_init( tmpMul );
-
-			mpz_mul_ui( ret, n, 2 );
-			mpz_mul( tmpMul, h, h );
-			mpz_sub( ret, tmpMul, ret );
-			
-			mpz_clear( tmpMul );
-		}
-		else
-		{
-			mpz_t tmpRet;
-			mpz_init( tmpRet );
-
-			SeqV( tmpRet, h, n, i - 1 );
-
-			mpz_mul( ret, h, tmpRet );
-
-			SeqV( tmpRet, h, n, i - 2 );
-			mpz_mul( tmpRet, n, tmpRet );
-
-			mpz_add( ret, ret, tmpRet );
-
-			mpz_clear( tmpRet );
-		}
-	}
-
-	void FactorLib::CongruenceSolvingWithLegendreSymbol( mpz_t ret, mpz_t n, mpz_t mod )
-	{
-		mpz_t h, m, x, v, w, tmpMul;
-		mpz_init( h );
-		mpz_init( x );
-		mpz_init( m );
-		mpz_init( v );
-		mpz_init( w );
-		mpz_init( tmpMul );
-
-		uLongLong j = ( mpz_get_ui( mod ) + 1 ) / 2;
-
-		mpz_mul_ui( h, n, 4 );
-		mpz_div( h, h, mod );
-		mpz_sub_ui( h, h, 1 );
-		mpz_sqrt( h, h );
-
-		//SeqV( ret, h, n, i );
-		//mpz_mul_ui( ret, ret, i );
-		//mpz_mod( ret, ret, mod );
-
-		mpz_set( m, n );
-		mpz_set( v, h );
-		mpz_mul( w, h, h );
-		mpz_mul_ui( tmpMul, m, 2 );
-		mpz_sub( w, w, tmpMul );
-		mpz_mod( w, w, mod );
-		
-		std::vector<uLongLong> b;
-
-		while( j > 0 )
-		{
-			b.push_back( j % 2 );
-			j = (uLongLong)floor( j/2 );
-		}
-
-		for( uLongLong i = b.size() - 1; i > 0; --i )
-		{
-			 mpz_mul( x, v, w );
-			 mpz_mul( tmpMul, h, m );
-			 mpz_sub( x, x, tmpMul );
-			 mpz_mod( x, x, mod );
-
-			 mpz_mul( v, v, v );
-			 mpz_mul_ui( tmpMul, m, 2 );
-			 mpz_sub( v, v, tmpMul );
-			 mpz_mod( v, v, mod );
-
-			 mpz_mul( w, v, w );
-			 mpz_mul_ui( tmpMul, n, 2 );
-			 mpz_mul( tmpMul, tmpMul, m);
-			 mpz_sub( w, w, tmpMul );
-			 mpz_mod( w, w, mod );
-
-			 mpz_powm_ui( m, m, 2, mod );
-
-			 if( b[i] == 0 )
-			 {
-				mpz_set( w, x );
-			 }
-			 else
-			 {
-				mpz_set( v, x );
-				mpz_mul( m, n, m );
-				mpz_mod( m, m, mod );
-			 }
-		}
-
-		mpz_set( ret, v );
-
-		mpz_clear( h );
-		mpz_clear( m );
-		mpz_clear( x );
-		mpz_clear( v );
-		mpz_clear( w );
-		mpz_clear( tmpMul );
 	}
 
 	void FactorLib::TonelliShanks( mpz_t ret, mpz_t n, mpz_t mod) 
@@ -637,18 +536,6 @@ namespace FactorLib
 		mpz_clear( fderivate );
 	}
 
-	void FactorLib::SolveQuadraticEQ(mpz_t ret, mpz_t prev, mpz_t n, mpz_t mod, int power)
-	{
-		if (power > 1)
-		{
-			HenselLemma( ret, prev, n, mod );
-		}
-		else
-		{
-			TonelliShanks( ret, n, mod );
-		}
-	}
-
 	bool FactorLib::CanBeFactoredOnBase( std::vector<uLongLong> &vecFactor, std::vector<long> &FactorBase, mpz_t n )
 	{
 		mpz_t tmp, locN;
@@ -720,6 +607,52 @@ namespace FactorLib
 		}
 	}
 
+	void FactorLib::SieveOfQCheckNumber(mpz_t* smoothBases, mpz_t *arrSieve, std::vector<std::vector<uLongLong> > &vecFactors, std::vector<long> &FactorBase, std::vector<float> &vecCheck, mpz_t LowerBound, mpz_t n, double CloseNUF, int start, int add )
+	{
+			std::vector<uLongLong> vecFactor;
+			mpz_t x;
+			mpz_t FxFunction;
+			mpz_init( x );
+			mpz_init( FxFunction );
+			uLongLong baseSize = FactorBase.size() + 1 + FactorBase.size()/10;
+
+			for( int i = start; i < vecCheck.size(); i += add )
+			{
+				vecFactor.clear();
+				if (iSmoothNumbersArraySize >= baseSize)
+				{
+					mpz_clear(x);
+					mpz_clear( FxFunction );
+					return;
+				}
+				if( vecCheck[i] > CloseNUF )
+				{
+					mpz_add_ui( x, LowerBound, i + 1 );
+					mpz_mul( FxFunction, x, x );
+					mpz_sub( FxFunction, FxFunction, n );
+					if ( CanBeFactoredOnBase( vecFactor, FactorBase, FxFunction ) )
+					{	
+						m.lock();
+						if (iSmoothNumbersArraySize >= baseSize)
+						{
+							m.unlock();
+							mpz_clear(x);
+							mpz_clear( FxFunction );
+							return;
+						}
+						mpz_set( arrSieve[iSmoothNumbersArraySize], FxFunction );
+						mpz_set( smoothBases[iSmoothNumbersArraySize], x );
+						vecFactors.push_back(vecFactor);
+						iSmoothNumbersArraySize++;
+						m.unlock();
+					}
+				}
+			}
+			mpz_clear(x);
+			mpz_clear( FxFunction );
+		
+	}
+
 	mpz_t* FactorLib::SieveOfQ( mpz_t* smoothBases, std::vector<std::vector<uLongLong> > &vecFactors, std::vector<long> &FactorBase, mpz_t n, uLongLong B )
 	{
 		mpz_t Square, LowerBound;
@@ -731,9 +664,9 @@ namespace FactorLib
 		mpz_init( QuadraticEq1 );
 		mpz_init( QuadraticEq2 );
 	
-		const uLongLong size = 1000000000;
+		const uLongLong size = 10000;
 		const uLongLong baseSize = FactorBase.size() + 1 + FactorBase.size()/10;
-		std::vector<uLongLong> vecFactor;
+		
 		std::vector<float> vecCheck(size);
 		mpz_t *arrSieve = new mpz_t[baseSize];
 
@@ -768,6 +701,11 @@ namespace FactorLib
 			vecCheck[ Start + 2*i ] += (float)log10(8);
 		}
 
+		int iAvailableCores = std::thread::hardware_concurrency() - 1;
+		std::vector<std::thread> threads(iAvailableCores);
+
+		long long dur = 0;
+
 		for( uLongLong i = 2; i < FactorBase.size(); ++i )
 		{
 			mpz_t tmpPrime, tmpMod;
@@ -798,7 +736,7 @@ namespace FactorLib
 			mpz_sub( tmpMod, QuadraticEq2, tmpMod );
 			mpz_mod( tmpMod, tmpMod, tmpPrime );
 			uLongLong Start2 = mpz_get_ui( tmpMod );
-				
+
 			for (uLongLong j = 0; j*primeBase + Start1 - 1< size; ++j)
 			{
 				vecCheck[j*primeBase + Start1 - 1] += (float)log10(primeBase);
@@ -813,39 +751,22 @@ namespace FactorLib
 			mpz_clear(tmpMod);
 		}
 
-		std::chrono::high_resolution_clock::time_point t3 = std::chrono::high_resolution_clock::now();
+		iSmoothNumbersArraySize = 0;
 
-		for (uLongLong i = 0; i < size; ++i)
+		
+
+		for( int i = 0; i < iAvailableCores; ++i )
 		{
-			vecFactor.clear();
-			mpz_t x;
-			mpz_init( x );
-			mpz_add_ui( x, LowerBound, i + 1 );
-			mpz_mul( FxFunction, x, x );
-			mpz_sub( FxFunction, FxFunction, n );
-
-			if( vecCheck[i] > CloseNUF )
-			{
-				if ( CanBeFactoredOnBase( vecFactor, FactorBase, FxFunction ) )
-				{	
-					mpz_set( arrSieve[k], FxFunction );
-					mpz_set( smoothBases[k], x );
-					vecFactors.push_back(vecFactor);
-					k++;
-					if (k == baseSize)
-					{
-						mpz_clear(x);
-						break;
-					}
-				}
-				
-			}
-			mpz_clear(x);
+			threads[i] = std::thread( SieveOfQCheckNumber, smoothBases, arrSieve, std::ref(vecFactors), FactorBase, std::ref(vecCheck), LowerBound, n, CloseNUF, i, iAvailableCores );
 		}
 
-		std::chrono::high_resolution_clock::time_point t4 = std::chrono::high_resolution_clock::now();
-		auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>( t4 - t3 ).count();
-		std::cout << "CanFactor" << duration2 << std::endl;
+		for( int i = 0; i < iAvailableCores; ++i )
+		{
+			threads[i].join();
+		}
+
+		
+	
 		
 		mpz_clear( Square );
 		mpz_clear( FxFunction );
@@ -910,7 +831,7 @@ namespace FactorLib
 				}
 			}
 		}
-		return 0;
+		return ToElim.size();
 	}
 
 	std::vector<std::vector<int> > FactorLib::GetBinaryMatrix(std::vector<std::vector<uLongLong> > vecFactors)
@@ -1157,7 +1078,7 @@ namespace FactorLib
 					mpz_init( div1 );
 					mpz_init( div2 );
 					
-					PollardRho( div1, n, 10000 );
+					PollardRho( div1, n);
 					mpz_div( div2, n, div1 );
 
 					Factorize( div1, factors );
@@ -1215,7 +1136,7 @@ namespace FactorLib
 
 		mpz_set_str( n, strNum.c_str(), 10 );
 
-		Pminus( div1, n, 10000);
+		Pminus( div1, n );
 
 		char* chDiv1 = new char[mpz_sizeinbase( div1, 10 )];
 		char* chDiv2 = new char[mpz_sizeinbase( div2, 10 )];
@@ -1245,7 +1166,7 @@ namespace FactorLib
 
 		mpz_set_str( n, strNum.c_str(), 10 );
 
-		PollardRho( div1, n, 10000);
+		PollardRho( div1, n );
 		mpz_div( div2, n, div1 );
 
 		char* chDiv1 = new char[mpz_sizeinbase( div1, 10 )];
@@ -1301,7 +1222,7 @@ namespace FactorLib
 		mpz_t( n );
 		mpz_init( n );
 		mpz_set_str( n, strNum.c_str(), 10 );
-		bool badNum = (mpz_cmp_ui( n, ULLONG_MAX ) > 0 );
+		bool badNum = (mpz_cmp_ui( n, 18446744073709551615 ) > 0 );
 		mpz_clear( n );
 		if( badNum )
 		{
@@ -1330,9 +1251,11 @@ namespace FactorLib
 			return "A szám túl nagy";
 		}
 
-		std::string resultMsg;
+		std::string resultMsg = strNum + " = ";
 		mpz_t n;
 		mpz_init( n );
+
+		mpz_set_str( n, strNum.c_str(), 10 );
 
 		Factorize( n, factors );
 
@@ -1359,7 +1282,7 @@ namespace FactorLib
 		mpz_t( n );
 		mpz_init( n );
 		mpz_set_str( n, strNum.c_str(), 10 );
-		bool badNum = (mpz_cmp_ui( n, ULLONG_MAX ) > 0 );
+		bool badNum = (mpz_cmp_ui( n, 18446744073709551615 ) > 0 );
 		mpz_clear( n );
 
 		if( badNum )

@@ -16,11 +16,11 @@ int main()
 	mpz_init( div2 );
 	mpz_init(n);
 	mpz_init(c);
-	mpz_set_str( n , "15347468797889771487897", 10);
+	mpz_set_str( n , "4999486012441", 10);
 	mpz_set_ui( c, 41 );
 	//FactorLib::FactorLib::PollardRho( div1, n, c, 10000 );
 	//FactorLib::FactorLib::TonelliShanks( div, n, c );
-	FactorLib::FactorLib::QuadraticSieve( div1, div2, n, 800);
+	FactorLib::FactorLib::QuadraticSieve( div1, div2, n, 127);
 	i = mpz_get_ui( div1 );
 	std::cout << i << std::endl;
 	mpz_clear( div1 );

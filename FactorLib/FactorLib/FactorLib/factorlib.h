@@ -3,17 +3,12 @@
 #ifndef FACTORLIB_H
 #define FACTORLIB_H
 
-#include "mpir.h"
+#include "..\..\mpir\lib\x64\Release\mpir.h"
 #include <vector>
 #include <map>
 #include <string>
-
-
-
-
-
-
-
+#include <mutex>
+#include <thread>
 
 namespace FactorLib
 {
@@ -67,27 +62,23 @@ namespace FactorLib
 										          
 			static void                           Fermat( mpz_t a, mpz_t b, mpz_t n );
 										          
-			static void                           PollardRho( mpz_t divisor, mpz_t n, unsigned int max );
+			static void                           PollardRho( mpz_t divisor, mpz_t n );
 										          
-			static void                           Pminus( mpz_t ret, mpz_t n, uLongLong max );
+			static void                           Pminus( mpz_t ret, mpz_t n );
 										          							          
 			static bool                           EulerCriterion( mpz_t n, mpz_t mod);
 										          
 			static uLongLong                      LesserPrimesCount( uLongLong n );
-										          
-			static void                           SeqV( mpz_t ret, mpz_t h, mpz_t n, uLongLong i );
-						                          
-			static void                           CongruenceSolvingWithLegendreSymbol( mpz_t ret, mpz_t n, mpz_t mod );
 						                          
 			static void                           TonelliShanks( mpz_t ret, mpz_t n, mpz_t mod);
 										          
-			static void                           HenselLemma( mpz_t ret, mpz_t prev, mpz_t n, mpz_t mod );
-										          
-			static void                           SolveQuadraticEQ( mpz_t ret, mpz_t prev, mpz_t n, mpz_t mod, int power );
+			static void                           HenselLemma( mpz_t ret, mpz_t prev, mpz_t n, mpz_t mod );	
 										          
 			static bool                           CanBeFactoredOnBase( std::vector<uLongLong> &vecFactor, std::vector<long> &FactorBase, mpz_t n );
 										          
-			static double                         GetT( mpz_t n );
+			static double                         GetT( mpz_t n );                 
+
+			static void                           SieveOfQCheckNumber( mpz_t* smoothBases, mpz_t *arrSieve, std::vector<std::vector<uLongLong> > &vecFactors,std::vector<long> &FactorBase, std::vector<float> &vecCheck, mpz_t LowerBound, mpz_t n, double CloseNUF, int start, int add);
 			
 			static mpz_t*                         SieveOfQ( mpz_t* smoothBases, std::vector<std::vector<uLongLong> > &vecFactors,std::vector<long> &FactorBase, mpz_t n, uLongLong B );
 										          
@@ -123,7 +114,10 @@ namespace FactorLib
 	};
 
 	static std::vector<unsigned long long> vecMillionPrimes = FactorLib::SieveOfE(1000000);
+
+	static std::mutex m;
+
 }
 
 
-#endif "FACTORLIB_H"
+#endif //FACTORLIB_H
