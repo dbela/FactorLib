@@ -80,7 +80,7 @@ namespace FactorLib
 
 			static void                           SieveOfQCheckNumber( mpz_t* smoothBases, mpz_t *arrSieve, std::vector<std::vector<uLongLong> > &vecFactors,std::vector<long> &FactorBase, std::vector<float> &vecCheck, mpz_t LowerBound, mpz_t n, double CloseNUF, int start, int add);
 			
-			static mpz_t*                         SieveOfQ( mpz_t* smoothBases, std::vector<std::vector<uLongLong> > &vecFactors,std::vector<long> &FactorBase, mpz_t n, uLongLong B );
+			static mpz_t*                         SieveOfQ( mpz_t* smoothBases, std::vector<std::vector<uLongLong> > &vecFactors,std::vector<long> &FactorBase, mpz_t n, uLongLong B, uLongLong size );
 										          
 			static uLongLong                      CheckMatrix( std::vector<std::vector<int> > &ToCheck );
 										          
@@ -93,8 +93,14 @@ namespace FactorLib
 			static void                           GetMultiplier( mpz_t nMultiplier, mpz_t n );
 										          
 			static void                           GetFactorBase( std::vector<long> &FactorBase, mpz_t n, uLongLong B );
+
+			static void                           FailedSieve( uLongLong &B, uLongLong &size, mpz_t n );
+
+			static uLongLong                      GetB( mpz_t n );
+			
+			static uLongLong                      GetSize( mpz_t n );
 										          
-			static void                           QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong B );
+			static void                           QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong B, uLongLong size );
 
 			static void                           Factorize( mpz_t n, factorMap &factors );
 			

@@ -653,7 +653,7 @@ namespace FactorLib
 		
 	}
 
-	mpz_t* FactorLib::SieveOfQ( mpz_t* smoothBases, std::vector<std::vector<uLongLong> > &vecFactors, std::vector<long> &FactorBase, mpz_t n, uLongLong B )
+	mpz_t* FactorLib::SieveOfQ( mpz_t* smoothBases, std::vector<std::vector<uLongLong> > &vecFactors, std::vector<long> &FactorBase, mpz_t n, uLongLong B,  uLongLong size )
 	{
 		mpz_t Square, LowerBound;
 		mpz_t FxFunction;
@@ -664,7 +664,6 @@ namespace FactorLib
 		mpz_init( QuadraticEq1 );
 		mpz_init( QuadraticEq2 );
 	
-		const uLongLong size = 10000;
 		const uLongLong baseSize = FactorBase.size() + 1 + FactorBase.size()/10;
 		
 		std::vector<float> vecCheck(size);
@@ -701,9 +700,6 @@ namespace FactorLib
 			vecCheck[ Start + 2*i ] += (float)log10(8);
 		}
 
-		int iAvailableCores = std::thread::hardware_concurrency() - 1;
-		std::vector<std::thread> threads(iAvailableCores);
-
 		long long dur = 0;
 
 		for( uLongLong i = 2; i < FactorBase.size(); ++i )
@@ -736,7 +732,8 @@ namespace FactorLib
 			mpz_sub( tmpMod, QuadraticEq2, tmpMod );
 			mpz_mod( tmpMod, tmpMod, tmpPrime );
 			uLongLong Start2 = mpz_get_ui( tmpMod );
-
+				
+			std::chrono::high_resolution_clock::time_point t3 = std::chrono::high_resolution_clock::now();
 			for (uLongLong j = 0; j*primeBase + Start1 - 1< size; ++j)
 			{
 				vecCheck[j*primeBase + Start1 - 1] += (float)log10(primeBase);
@@ -746,14 +743,21 @@ namespace FactorLib
 			{
 				vecCheck[j*primeBase + Start2 -1 ] += (float)log10(primeBase);
 			}
+			std::chrono::high_resolution_clock::time_point t4 = std::chrono::high_resolution_clock::now();
+			auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>( t4 - t3 ).count();
+			
+			dur += duration2;
 
 			mpz_clear(tmpPrime);
 			mpz_clear(tmpMod);
 		}
 
+		std::cout << "Vectorpakol" << dur << std::endl;
+
 		iSmoothNumbersArraySize = 0;
 
-		
+		int iAvailableCores = std::thread::hardware_concurrency() - 1;
+		std::vector<std::thread> threads(iAvailableCores);
 
 		for( int i = 0; i < iAvailableCores; ++i )
 		{
@@ -782,8 +786,7 @@ namespace FactorLib
 			{
 				for( uLongLong j = col; j < ToElim[i].size(); ++j )
 				{
-					ToElim[i][j] += ToElim[row][j];
-					ToElim[i][j] =  ToElim[i][j] % 2;
+					ToElim[i][j]^=ToElim[row][j];
 				}
 			}
 		}
@@ -912,8 +915,103 @@ namespace FactorLib
 		}
 	}
 
-	void FactorLib::QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong B )
+	uLongLong FactorLib::GetB( mpz_t n )
 	{
+		size_t size = mpz_sizeinbase( n, 10 );
+
+		if( size <= 10 )
+		{
+			return 500;
+		}
+		else if( size <= 15 )
+		{
+			return 800;
+		}
+		else if( size <= 20 )
+		{
+			return 800;
+		}
+		else if( size <= 25 )
+		{
+			return 1000;
+		}
+		else if( size <= 30 )
+		{
+			return 2000;
+		}
+		else if( size <= 35 )
+		{
+			return 5000;
+		}
+		else if( size <= 40 )
+		{
+		
+		}
+		else
+		{
+		
+		}
+		return 0;
+	}
+
+	uLongLong FactorLib::GetSize( mpz_t n )
+	{
+		size_t size = mpz_sizeinbase( n, 10 );
+		
+		if( size <= 10 )
+		{
+			return 1000;
+		}
+		else if( size <= 15 )
+		{
+			return 10000;
+		}
+		else if( size <= 20 )
+		{
+			return 10000;
+		}
+		else if( size <= 25 )
+		{
+			return 1000000;
+		}
+		else if( size <= 30 )
+		{
+			return 100000000;
+		}
+		else if( size <= 35 )
+		{
+			return 300000000;
+		}
+		else if( size <= 40 )
+		{
+		
+		}
+		else
+		{
+		
+		}
+		return 0;
+	}
+
+	void FactorLib::FailedSieve( uLongLong &B, uLongLong& size, mpz_t n )
+	{
+		size_t numsize = mpz_sizeinbase( n, 10 );
+
+		if( numsize >= 30 )
+		{
+			B += GetB( n );
+		}
+		else
+		{
+			size += GetSize( n );
+		}
+	}
+
+	void FactorLib::QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong B,  uLongLong size )
+	{
+		if( mpz_sizeinbase( n, 10 ) < 5 )
+			return;
+
 		if( mpz_even_p( n ) != 0 )
 		{
 			mpz_set_ui( div1, 2    );
@@ -928,30 +1026,48 @@ namespace FactorLib
 
 		std::vector<long> FactorBase;
 		
-		GetFactorBase( FactorBase, nMultiplier, B );
-		
-		int baseSize = (int)(FactorBase.size() + 1 + FactorBase.size()/10);
+		int baseSize = 1;
 
 		std::vector<std::vector<uLongLong> > vecFactors;
 		std::vector<std::vector<int> > vecFactorsMod2;
-		mpz_t* smoothBases   = new mpz_t[ baseSize ];
-		for( int i = 0; i < baseSize ; ++i )
+		mpz_t* smoothBases;
+		
+		mpz_t* smoothNumbers;
+		while( vecFactors.size() < baseSize )
 		{
-			mpz_init( smoothBases[i] );
+			vecFactors.clear();
+			FactorBase.clear();
+		
+			GetFactorBase( FactorBase, nMultiplier, B );
+
+			baseSize = (int)(FactorBase.size() + 1 + FactorBase.size()/10);
+
+			smoothBases = new mpz_t[ baseSize ];
+
+			for( int i = 0; i < baseSize ; ++i )
+			{
+				mpz_init( smoothBases[i] );
+			}
+
+			std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+			smoothNumbers = SieveOfQ( smoothBases, vecFactors, FactorBase, nMultiplier, B , size );
+
+			std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+			std::cout << "Sieve" << duration << std::endl;
+
+			FailedSieve( B, size, n );
+
+			//if( B > GetB( n ) * 5 || size > GetSize( n ) * 5 )
+			//	break;
 		}
-
-		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-
-		mpz_t* smoothNumbers = SieveOfQ( smoothBases, vecFactors, FactorBase, nMultiplier, B );
-
-		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-		std::cout << "Sieve" << duration << std::endl;
 
 		vecFactorsMod2 = GetBinaryMatrix( vecFactors );
 
 		mpz_set_ui( div1, 1 );
-		while ( ( mpz_cmp_ui(div1, 1) == 0 || mpz_cmp(div1, nMultiplier) == 0 ) && vecFactorsMod2.size() > FactorBase.size() )
+		mpz_set( div2, n );
+		while ( ( mpz_cmp_ui(div1, 1) == 0 || mpz_cmp(div1, n) == 0 ) && vecFactorsMod2.size() > FactorBase.size() )
 		{
 			std::chrono::high_resolution_clock::time_point t3 = std::chrono::high_resolution_clock::now();
 
@@ -1027,7 +1143,7 @@ namespace FactorLib
 			mpz_t div2; 
 			mpz_init( div1 );
 			mpz_init( div2 );
-			QuadraticSieve( div1, div2, n, 1000 );
+			QuadraticSieve( div1, div2, n, 2000, 100000000 );
 
 			if( mpz_cmp( div1, n ) == 0 )
 			{
@@ -1197,7 +1313,7 @@ namespace FactorLib
 
 		mpz_set_str( n, strNum.c_str(), 10 );
 
-		QuadraticSieve( div1, div2, n, 1000 );
+		QuadraticSieve( div1, div2, n, 127,10000 );
 
 		char* chDiv1 = new char[mpz_sizeinbase( div1, 10 )];
 		char* chDiv2 = new char[mpz_sizeinbase( div2, 10 )];

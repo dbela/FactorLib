@@ -20,7 +20,7 @@ int main()
 	mpz_set_ui( c, 41 );
 	//FactorLib::FactorLib::PollardRho( div1, n, c, 10000 );
 	//FactorLib::FactorLib::TonelliShanks( div, n, c );
-	FactorLib::FactorLib::QuadraticSieve( div1, div2, n, 127);
+	FactorLib::FactorLib::QuadraticSieve( div1, div2, n, 127, 10000 );
 	i = mpz_get_ui( div1 );
 	std::cout << i << std::endl;
 	mpz_clear( div1 );
