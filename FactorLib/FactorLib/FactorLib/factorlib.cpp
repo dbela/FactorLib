@@ -733,7 +733,6 @@ namespace FactorLib
 			mpz_mod( tmpMod, tmpMod, tmpPrime );
 			uLongLong Start2 = mpz_get_ui( tmpMod );
 				
-			std::chrono::high_resolution_clock::time_point t3 = std::chrono::high_resolution_clock::now();
 			for (uLongLong j = 0; j*primeBase + Start1 - 1< size; ++j)
 			{
 				vecCheck[j*primeBase + Start1 - 1] += (float)log10(primeBase);
@@ -743,16 +742,10 @@ namespace FactorLib
 			{
 				vecCheck[j*primeBase + Start2 -1 ] += (float)log10(primeBase);
 			}
-			std::chrono::high_resolution_clock::time_point t4 = std::chrono::high_resolution_clock::now();
-			auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>( t4 - t3 ).count();
-			
-			dur += duration2;
 
 			mpz_clear(tmpPrime);
 			mpz_clear(tmpMod);
 		}
-
-		std::cout << "Vectorpakol" << dur << std::endl;
 
 		iSmoothNumbersArraySize = 0;
 
@@ -943,13 +936,9 @@ namespace FactorLib
 		{
 			return 5000;
 		}
-		else if( size <= 40 )
-		{
-		
-		}
 		else
 		{
-		
+			return 10000;
 		}
 		return 0;
 	}
@@ -982,15 +971,10 @@ namespace FactorLib
 		{
 			return 300000000;
 		}
-		else if( size <= 40 )
+		else 
 		{
-		
+			return 700000000;
 		}
-		else
-		{
-		
-		}
-		return 0;
 	}
 
 	void FactorLib::FailedSieve( uLongLong &B, uLongLong& size, mpz_t n )
@@ -1025,7 +1009,10 @@ namespace FactorLib
 		GetMultiplier( nMultiplier, n );
 
 		std::vector<long> FactorBase;
-		
+
+		size = GetSize( n );
+		B = GetB( n );
+
 		int baseSize = 1;
 
 		std::vector<std::vector<uLongLong> > vecFactors;
