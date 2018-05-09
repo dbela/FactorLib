@@ -71,9 +71,7 @@ namespace FactorLib
 			static uLongLong                      LesserPrimesCount( uLongLong n );
 						                          
 			static void                           TonelliShanks( mpz_t ret, mpz_t n, mpz_t mod);
-										          
-			static void                           HenselLemma( mpz_t ret, mpz_t prev, mpz_t n, mpz_t mod );	
-										          
+										      						          
 			static bool                           CanBeFactoredOnBase( std::vector<uLongLong> &vecFactor, std::vector<long> &FactorBase, mpz_t n );
 										          
 			static double                         GetT( mpz_t n );                 

@@ -432,6 +432,11 @@ namespace FactorLib
 
 	void FactorLib::TonelliShanks( mpz_t ret, mpz_t n, mpz_t mod) 
 	{
+		if( mpz_cmp_ui( mod , 3) == 0 )
+		{
+			mpz_set_ui( ret, 1 );
+		}
+
 		mpz_t S, Q, z, t;
 		mpz_init( S );
 		mpz_init( Q );
@@ -443,8 +448,8 @@ namespace FactorLib
 		{
 			mpz_div_ui( Q, Q, 2 );
 			mpz_add_ui( S, S, 1 );
-		}
-
+		}		
+		
 		mpz_set_ui( z, 3 );
 		while( EulerCriterion( z , mod ) == true && mpz_cmp( z, mod ) < 0 )
 		{
@@ -515,25 +520,6 @@ namespace FactorLib
 		mpz_clear( Q );
 		mpz_clear( z );
 		mpz_clear( t );
-	}
-
-	void FactorLib::HenselLemma(mpz_t ret, mpz_t prev, mpz_t n, mpz_t mod)
-	{
-		mpz_t fderivate;
-		mpz_init( fderivate );
-		mpz_mul_ui( fderivate, prev, 2 );
-		mpz_mod( fderivate, fderivate, mod );
-		if (mpz_cmp_ui(fderivate, 0) != 0)
-		{
-			mpz_mul( ret, prev, prev );
-			mpz_sub( ret, ret, n );
-			mpz_mul( ret, ret, prev );
-			mpz_fdiv_q_ui( ret, ret, 2 );
-			mpz_sub( ret, prev, ret );
-			mpz_mod( ret, ret, mod );
-		}
-
-		mpz_clear( fderivate );
 	}
 
 	bool FactorLib::CanBeFactoredOnBase( std::vector<uLongLong> &vecFactor, std::vector<long> &FactorBase, mpz_t n )
