@@ -62,7 +62,7 @@ namespace FactorLib
 										          
 			static void                           Fermat( mpz_t a, mpz_t b, mpz_t n );
 										          
-			static void                           PollardRho( mpz_t divisor, mpz_t n );
+			static void                           PollardRho( mpz_t divisor, mpz_t n, unsigned int maxpolynoms );
 										          
 			static void                           Pminus( mpz_t ret, mpz_t n );
 										          							          
@@ -100,7 +100,7 @@ namespace FactorLib
 			
 			static uLongLong                      GetSize( mpz_t n );
 										          
-			static void                           QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong B, uLongLong size );
+			static void                           QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong &baseSize, int &GaussNum ,uLongLong B = 0, uLongLong size = 0 );
 
 			static void                           Factorize( mpz_t n, factorMap &factors );
 			
@@ -112,7 +112,7 @@ namespace FactorLib
 
 			static std::string                    RunPollardRho( std::string strNum );
 
-			static std::string                    RunQuadraticSieve( std::string strNum );
+			static std::string                    RunQuadraticSieve( std::string strNum, std::string B = "", std::string size ="" );
 
 			static std::string                    RunPrimeTest( std::string strNum );
 

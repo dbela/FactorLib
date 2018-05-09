@@ -285,7 +285,7 @@ namespace FactorLib
 		mpz_clear( r );
 	}
 
-	void FactorLib::PollardRho( mpz_t divisor, mpz_t n )
+	void FactorLib::PollardRho( mpz_t divisor, mpz_t n, unsigned int maxpolynoms )
 	{
 		if( mpz_even_p( n ) != 0 )
 		{
@@ -300,7 +300,7 @@ namespace FactorLib
 		mpz_set_ui( divisor, 1);
 		int c = 1;
 		unsigned int primeIndex = 0;
-		while( mpz_cmp_ui( divisor, 1) == 0 && primeIndex + 1 < max )
+		while( mpz_cmp_ui( divisor, 1) == 0 && primeIndex + 1 < maxpolynoms )
 		{
 			unsigned int range = 1;
 			unsigned int terms = 0;
@@ -936,6 +936,10 @@ namespace FactorLib
 		{
 			return 5000;
 		}
+		else if( size <= 40 )
+		{
+			return 10000;
+		}
 		else
 		{
 			return 10000;
@@ -957,7 +961,7 @@ namespace FactorLib
 		}
 		else if( size <= 20 )
 		{
-			return 10000;
+			return 100000;
 		}
 		else if( size <= 25 )
 		{
@@ -987,11 +991,11 @@ namespace FactorLib
 		}
 		else
 		{
-			size += GetSize( n );
+			size += 2*size;
 		}
 	}
 
-	void FactorLib::QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong B,  uLongLong size )
+	void FactorLib::QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong &baseSize, int &GaussNum , uLongLong B,  uLongLong size )
 	{
 		if( mpz_sizeinbase( n, 10 ) < 5 )
 			return;
@@ -1010,10 +1014,13 @@ namespace FactorLib
 
 		std::vector<long> FactorBase;
 
-		size = GetSize( n );
-		B = GetB( n );
+		if( B == 0 || size == 0 )
+		{
+			size = GetSize( n );
+			B = GetB( n );
+		}
 
-		int baseSize = 1;
+		baseSize = 1;
 
 		std::vector<std::vector<uLongLong> > vecFactors;
 		std::vector<std::vector<int> > vecFactorsMod2;
@@ -1054,8 +1061,10 @@ namespace FactorLib
 
 		mpz_set_ui( div1, 1 );
 		mpz_set( div2, n );
+		GaussNum = 0;
 		while ( ( mpz_cmp_ui(div1, 1) == 0 || mpz_cmp(div1, n) == 0 ) && vecFactorsMod2.size() > FactorBase.size() )
 		{
+			GaussNum++;
 			std::chrono::high_resolution_clock::time_point t3 = std::chrono::high_resolution_clock::now();
 
 			uLongLong index = BinaryGaussElimination( vecFactorsMod2);
@@ -1111,26 +1120,52 @@ namespace FactorLib
 
 	void FactorLib::Factorize( mpz_t n, factorMap &factors )
 	{
-		int pow2 = 0;
-		while( mpz_even_p( n ) != 0 )
+		for( int i = 0; i < vecMillionPrimes.size(); ++i  )
 		{
-			mpz_div_ui( n, n, 2 );
-			pow2++;
+			uLongLong prime = vecMillionPrimes[i];
+			int pow2 = 0;
+			mpz_t mod;
+			mpz_init( mod );
+			mpz_mod_ui( mod, n, prime );
+			while( mpz_cmp_ui( mod, 0 ) == 0 )
+			{	
+				mpz_div_ui( n, n, prime );
+				pow2++;
+				mpz_mod_ui( mod, n, prime );
+			}
+			if( pow2 > 0 )
+			{
+				factors[std::to_string(prime)] = pow2;
+			}
+			if( mpz_cmp_ui( n, 1 ) == 0 )
+				return;
 		}
-		if( pow2 > 0 )
-		{
-			factors["2"] = pow2;
-		}
+		
 
 		int size = (int)mpz_sizeinbase( n, 10 );
 
 		if( size > 19 )
 		{	
+
 			mpz_t div1; 
 			mpz_t div2; 
 			mpz_init( div1 );
 			mpz_init( div2 );
-			QuadraticSieve( div1, div2, n, 2000, 100000000 );
+
+			PollardRho( div1, n, 1000 );
+			if( mpz_cmp( div1, n ) != 0 )
+			{
+				mpz_div( div2, n, div1 );
+
+				Factorize( div1, factors );
+				Factorize( div2, factors );
+				mpz_clear( div1 );
+				mpz_clear( div2 );
+				return;
+			}
+			uLongLong basesize;
+			int gaussnum;
+			QuadraticSieve( div1, div2, n, basesize, gaussnum, 2000, 100000000 );
 
 			if( mpz_cmp( div1, n ) == 0 )
 			{
@@ -1181,8 +1216,15 @@ namespace FactorLib
 					mpz_init( div1 );
 					mpz_init( div2 );
 					
-					PollardRho( div1, n);
+					PollardRho( div1, n, 500);
 					mpz_div( div2, n, div1 );
+					uLongLong baseSize = 0;
+					int GaussNum;
+
+					if( mpz_cmp_ui( div1, 1 ) == 0 || mpz_cmp( div1, n ) == 0 )
+					{
+						QuadraticSieve( div1, div2, n, baseSize, GaussNum );
+					}
 
 					Factorize( div1, factors );
 					Factorize( div2, factors );
@@ -1269,7 +1311,7 @@ namespace FactorLib
 
 		mpz_set_str( n, strNum.c_str(), 10 );
 
-		PollardRho( div1, n );
+		PollardRho( div1, n, 1000 );
 		mpz_div( div2, n, div1 );
 
 		char* chDiv1 = new char[mpz_sizeinbase( div1, 10 )];
@@ -1290,7 +1332,7 @@ namespace FactorLib
 		}
 	}
 	
-	std::string FactorLib::RunQuadraticSieve( std::string strNum )
+	std::string FactorLib::RunQuadraticSieve( std::string strNum, std::string B, std::string size )
 	{
 		std::string resMsg, strDiv1, strDiv2;
 		mpz_t n, div1, div2;
@@ -1300,23 +1342,35 @@ namespace FactorLib
 
 		mpz_set_str( n, strNum.c_str(), 10 );
 
-		QuadraticSieve( div1, div2, n, 127,10000 );
-
+		uLongLong baseSize = 0;
+		int GaussNum = 0;
+		if( B != "" && size != "" )
+		{
+			uLongLong base = std::stoull( B );
+			QuadraticSieve( div1, div2, n, baseSize, GaussNum, base, std::stoull(size) );
+		}
+		else
+		{
+			QuadraticSieve( div1, div2, n, baseSize, GaussNum );
+		}
 		char* chDiv1 = new char[mpz_sizeinbase( div1, 10 )];
 		char* chDiv2 = new char[mpz_sizeinbase( div2, 10 )];
 		mpz_get_str( chDiv1, 10, div1 );
 		mpz_get_str( chDiv2, 10, div2 );
-
+		
 		mpz_clear( n    );
 		mpz_clear( div1 );
 		mpz_clear( div2 );
+
+		std::string data = "A talált relációk száma: " + std::to_string( baseSize ) + ". A végrehajtott Gauss-eliminációk száma: " + std::to_string( GaussNum ) + ".";
+
 		if( chDiv1 == "1" || chDiv2 == "1" )
 		{
 			return "A(z) " + strNum + " szám prím.";
 		}
 		else
 		{
-			return strNum + " = " + std::string( chDiv1 ) + " * " + std::string( chDiv2 );
+			return strNum + " = " + std::string( chDiv1 ) + " * " + std::string( chDiv2 ) + " . " + data;
 		}
 	}
 
@@ -1348,11 +1402,6 @@ namespace FactorLib
 	std::string FactorLib::RunFactorize( std::string strNum )
 	{
 		factorMap factors;
-
-		if( strNum.length() > 40 )
-		{
-			return "A szám túl nagy";
-		}
 
 		std::string resultMsg = strNum + " = ";
 		mpz_t n;
