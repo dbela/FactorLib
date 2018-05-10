@@ -342,36 +342,33 @@ namespace FactorLibTests
 			mpz_init( div1 );
 			mpz_init( div2 );
 			mpz_init( n );
-
-			unsigned long long baseSize;
-			int GaussNum;
 			
 			mpz_set_str( n, "1164653", 10 );
-			FactorLib::FactorLib::QuadraticSieve( div1, div2, n , baseSize, GaussNum);
+			FactorLib::FactorLib::QuadraticSieve( div1, div2, n );
 			Assert::IsFalse( mpz_cmp( div1, n ) == 0 );
 			mpz_mul( div1, div1, div2 );
 			Assert::IsTrue( mpz_cmp( div1, n) == 0 );
 
 			mpz_set_str( n, "151616488497", 10 );
-			FactorLib::FactorLib::QuadraticSieve( div1, div2, n , baseSize, GaussNum);
+			FactorLib::FactorLib::QuadraticSieve( div1, div2, n );
 			Assert::IsFalse( mpz_cmp( div1, n ) == 0 );
 			mpz_mul( div1, div1, div2 );
 			Assert::IsTrue( mpz_cmp( div1, n) == 0 );
 
 			mpz_set_str( n, "498484841891891897", 10 );
-			FactorLib::FactorLib::QuadraticSieve( div1, div2, n , baseSize, GaussNum);
+			FactorLib::FactorLib::QuadraticSieve( div1, div2, n );
 			Assert::IsFalse( mpz_cmp( div1, n ) == 0 );
 			mpz_mul( div1, div1, div2 );
 			Assert::IsTrue( mpz_cmp( div1, n) == 0 );
 
 			mpz_set_str( n, "484987897984984949898498945", 10 );
-			FactorLib::FactorLib::QuadraticSieve( div1, div2, n , baseSize, GaussNum);
+			FactorLib::FactorLib::QuadraticSieve( div1, div2, n );
 			Assert::IsFalse( mpz_cmp( div1, n ) == 0 );
 			mpz_mul( div1, div1, div2 );
 			Assert::IsTrue( mpz_cmp( div1, n) == 0 );
 
-			mpz_set_str( n, "993474687978897714878978987989", 10 );
-			FactorLib::FactorLib::QuadraticSieve( div1, div2, n , baseSize, GaussNum);
+			mpz_set_str( n, "993474687978897714878978987989", 10  );
+			FactorLib::FactorLib::QuadraticSieve( div1, div2, n );
 			Assert::IsFalse( mpz_cmp( div1, n ) == 0 );
 			mpz_mul( div1, div1, div2 );
 			Assert::IsTrue( mpz_cmp( div1, n) == 0 );

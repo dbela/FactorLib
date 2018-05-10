@@ -2,6 +2,8 @@
 #include <math.h>
 #include <chrono>
 #include <iostream>
+#include <algorithm>
+
 
 int iSmoothNumbersArraySize;
 
@@ -973,7 +975,7 @@ namespace FactorLib
 
 		if( numsize >= 30 )
 		{
-			B += GetB( n );
+			B += 2*B;
 		}
 		else
 		{
@@ -981,16 +983,18 @@ namespace FactorLib
 		}
 	}
 
-	void FactorLib::QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong &baseSize, int &GaussNum , uLongLong B,  uLongLong size )
+	std::pair<uLongLong, int> FactorLib::QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n , uLongLong B,  uLongLong size )
 	{
 		if( mpz_sizeinbase( n, 10 ) < 5 )
-			return;
+		{
+			return std::pair<uLongLong, int>(0,0);
+		}
 
 		if( mpz_even_p( n ) != 0 )
 		{
 			mpz_set_ui( div1, 2    );
 			mpz_div_ui( div2, n, 2 );
-			return;
+			return std::pair<uLongLong, int>( 0, 0 );
 		}
 
 		mpz_t nMultiplier;
@@ -1000,13 +1004,15 @@ namespace FactorLib
 
 		std::vector<long> FactorBase;
 
+		bool IsSelfInitialized = false;
 		if( B == 0 || size == 0 )
 		{
 			size = GetSize( n );
 			B = GetB( n );
+			IsSelfInitialized = true;
 		}
 
-		baseSize = 1;
+		uLongLong baseSize = 1;
 
 		std::vector<std::vector<uLongLong> > vecFactors;
 		std::vector<std::vector<int> > vecFactorsMod2;
@@ -1037,17 +1043,20 @@ namespace FactorLib
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
 			std::cout << "Sieve" << duration << std::endl;
 
-			FailedSieve( B, size, n );
+			if( IsSelfInitialized )
+				FailedSieve( B, size, n );
+			else
+				break;
 
-			//if( B > GetB( n ) * 5 || size > GetSize( n ) * 5 )
-			//	break;
+			if( B > GetB( n ) * 5 || size > GetSize( n ) * 5 )
+				break;
 		}
 
 		vecFactorsMod2 = GetBinaryMatrix( vecFactors );
 
 		mpz_set_ui( div1, 1 );
 		mpz_set( div2, n );
-		GaussNum = 0;
+		int GaussNum = 0;
 		while ( ( mpz_cmp_ui(div1, 1) == 0 || mpz_cmp(div1, n) == 0 ) && vecFactorsMod2.size() > FactorBase.size() )
 		{
 			GaussNum++;
@@ -1102,6 +1111,8 @@ namespace FactorLib
 
 		
 		mpz_clear( nMultiplier );
+
+		return std::pair<uLongLong,int>( baseSize, GaussNum );
 	}
 
 	void FactorLib::Factorize( mpz_t n, factorMap &factors )
@@ -1149,9 +1160,7 @@ namespace FactorLib
 				mpz_clear( div2 );
 				return;
 			}
-			uLongLong basesize;
-			int gaussnum;
-			QuadraticSieve( div1, div2, n, basesize, gaussnum, 2000, 100000000 );
+			QuadraticSieve( div1, div2, n, 2000, 100000000 );
 
 			if( mpz_cmp( div1, n ) == 0 )
 			{
@@ -1327,17 +1336,16 @@ namespace FactorLib
 		mpz_init( div2 );
 
 		mpz_set_str( n, strNum.c_str(), 10 );
-
-		uLongLong baseSize = 0;
-		int GaussNum = 0;
+		
+		std::pair<uLongLong, int> QSdata;
 		if( B != "" && size != "" )
 		{
 			uLongLong base = std::stoull( B );
-			QuadraticSieve( div1, div2, n, baseSize, GaussNum, base, std::stoull(size) );
+			QSdata = QuadraticSieve( div1, div2, n, base, std::stoull(size) );
 		}
 		else
 		{
-			QuadraticSieve( div1, div2, n, baseSize, GaussNum );
+			QSdata = QuadraticSieve( div1, div2, n );
 		}
 		char* chDiv1 = new char[mpz_sizeinbase( div1, 10 )];
 		char* chDiv2 = new char[mpz_sizeinbase( div2, 10 )];
@@ -1348,7 +1356,7 @@ namespace FactorLib
 		mpz_clear( div1 );
 		mpz_clear( div2 );
 
-		std::string data = "A talált relációk száma: " + std::to_string( baseSize ) + ". A végrehajtott Gauss-eliminációk száma: " + std::to_string( GaussNum ) + ".";
+		std::string data = "A talált relációk száma: " + std::to_string( QSdata.first ) + ". A végrehajtott Gauss-eliminációk száma: " + std::to_string( QSdata.second ) + ".";
 
 		if( chDiv1 == "1" || chDiv2 == "1" )
 		{

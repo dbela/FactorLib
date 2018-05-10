@@ -98,7 +98,7 @@ namespace FactorLib
 			
 			static uLongLong                      GetSize( mpz_t n );
 										          
-			static void                           QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong &baseSize, int &GaussNum ,uLongLong B = 0, uLongLong size = 0 );
+			static std::pair<uLongLong,int>       QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong B = 0, uLongLong size = 0 );
 
 			static void                           Factorize( mpz_t n, factorMap &factors );
 			
