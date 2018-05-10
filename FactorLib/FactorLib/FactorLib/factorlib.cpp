@@ -869,11 +869,16 @@ namespace FactorLib
 
 	void FactorLib::GetFactorBase(std::vector<long> &FactorBase, mpz_t n, uLongLong B)
 	{
+		uLongLong vecSize = LesserPrimesCount( B );
+
+		if( vecSize < 3 )
+			return;
+
 		FactorBase.push_back( -1 );
 		FactorBase.push_back(  8 );
 
 		uLongLong i = 1;
-		uLongLong vecSize = LesserPrimesCount( B );
+		
 		while( FactorBase.size() != vecSize && i < vecMillionPrimes.size() )
 		{
 			mpz_t tmpPrime, tmpBase, tmpBase2;
@@ -985,7 +990,18 @@ namespace FactorLib
 
 	std::pair<uLongLong, int> FactorLib::QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n , uLongLong B,  uLongLong size )
 	{
-		if( mpz_sizeinbase( n, 10 ) < 5 )
+		mpz_set( div1, n );
+		mpz_set_ui( div2, 1);
+
+		bool IsSelfInitialized = false;
+		if( B == 0 || size == 0 )
+		{
+			size = GetSize( n );
+			B = GetB( n );
+			IsSelfInitialized = true;
+		}
+
+		if( mpz_sizeinbase( n, 10 ) < 5 && IsSelfInitialized  )
 		{
 			return std::pair<uLongLong, int>(0,0);
 		}
@@ -1004,14 +1020,6 @@ namespace FactorLib
 
 		std::vector<long> FactorBase;
 
-		bool IsSelfInitialized = false;
-		if( B == 0 || size == 0 )
-		{
-			size = GetSize( n );
-			B = GetB( n );
-			IsSelfInitialized = true;
-		}
-
 		uLongLong baseSize = 1;
 
 		std::vector<std::vector<uLongLong> > vecFactors;
@@ -1025,6 +1033,9 @@ namespace FactorLib
 			FactorBase.clear();
 		
 			GetFactorBase( FactorBase, nMultiplier, B );
+
+			if( FactorBase.size() < 3 )
+				return std::pair<uLongLong, int>( 0, 0 );
 
 			baseSize = (int)(FactorBase.size() + 1 + FactorBase.size()/10);
 
@@ -1214,7 +1225,7 @@ namespace FactorLib
 					PollardRho( div1, n, 500);
 					mpz_div( div2, n, div1 );
 					uLongLong baseSize = 0;
-					int GaussNum;
+					int GaussNum = 0;
 
 					if( mpz_cmp_ui( div1, 1 ) == 0 || mpz_cmp( div1, n ) == 0 )
 					{
