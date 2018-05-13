@@ -920,11 +920,11 @@ namespace FactorLib
 		}
 		else if( size <= 20 )
 		{
-			return 800;
+			return 1500;
 		}
 		else if( size <= 25 )
 		{
-			return 1000;
+			return 1800;
 		}
 		else if( size <= 30 )
 		{
@@ -955,15 +955,15 @@ namespace FactorLib
 		}
 		else if( size <= 15 )
 		{
-			return 10000;
+			return 100000;
 		}
 		else if( size <= 20 )
 		{
-			return 100000;
+			return 1000000;
 		}
 		else if( size <= 25 )
 		{
-			return 1000000;
+			return 10000000;
 		}
 		else if( size <= 30 )
 		{
@@ -990,6 +990,7 @@ namespace FactorLib
 		else
 		{
 			size += 2*size;
+			size += 2*B;
 		}
 	}
 

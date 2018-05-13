@@ -70,7 +70,7 @@ namespace FactorLibTests
 		{
 			mpz_t ret, a, b, mod;
 			mpz_init( ret );
-			mpz_init( a   ); 
+			mpz_init( a    ); 
 			mpz_init( b   );
 			mpz_init( mod );
 
@@ -183,30 +183,35 @@ namespace FactorLibTests
 			mpz_set_ui( n, 271420541 );
 			FactorLib::FactorLib::Fermat( a, b, n );
 			Assert::IsFalse( mpz_cmp( a, n ) == 0 );
+			Assert::IsFalse( mpz_cmp( b, n ) == 0 );
 			mpz_mul( a, a, b);
 			Assert::IsTrue( mpz_cmp( a, n ) == 0 );
 
 			mpz_set_ui( n, 27144361209 );
 			FactorLib::FactorLib::Fermat( a, b, n );
 			Assert::IsFalse( mpz_cmp( a, n ) == 0 );
+			Assert::IsFalse( mpz_cmp( b, n ) == 0 );
 			mpz_mul( a, a, b);
 			Assert::IsTrue( mpz_cmp( a, n ) == 0 );
 
 			mpz_set_ui( n, 4845050131088271 );
 			FactorLib::FactorLib::Fermat( a, b, n );
 			Assert::IsFalse( mpz_cmp( a, n ) == 0 );
+			Assert::IsFalse( mpz_cmp( b, n ) == 0 );
 			mpz_mul( a, a, b);
 			Assert::IsTrue( mpz_cmp( a, n ) == 0 );
 
 			mpz_set_ui( n, 76437 );
 			FactorLib::FactorLib::Fermat( a, b, n );
 			Assert::IsFalse( mpz_cmp( a, n ) == 0 );
+			Assert::IsFalse( mpz_cmp( b, n ) == 0 );
 			mpz_mul( a, a, b);
 			Assert::IsTrue( mpz_cmp( a, n ) == 0 );
 
 			mpz_set_ui( n, 1010426592163 );
 			FactorLib::FactorLib::Fermat( a, b, n );
 			Assert::IsFalse( mpz_cmp( a, n ) == 0 );
+			Assert::IsFalse( mpz_cmp( b, n ) == 0 );
 			mpz_mul( a, a, b);
 			Assert::IsTrue( mpz_cmp( a, n ) == 0 );
 
@@ -346,30 +351,35 @@ namespace FactorLibTests
 			mpz_set_str( n, "1164653", 10 );
 			FactorLib::FactorLib::QuadraticSieve( div1, div2, n );
 			Assert::IsFalse( mpz_cmp( div1, n ) == 0 );
+			Assert::IsFalse( mpz_cmp( div2, n ) == 0 );
 			mpz_mul( div1, div1, div2 );
 			Assert::IsTrue( mpz_cmp( div1, n) == 0 );
 
 			mpz_set_str( n, "151616488497", 10 );
 			FactorLib::FactorLib::QuadraticSieve( div1, div2, n );
 			Assert::IsFalse( mpz_cmp( div1, n ) == 0 );
+			Assert::IsFalse( mpz_cmp( div2, n ) == 0 );
 			mpz_mul( div1, div1, div2 );
 			Assert::IsTrue( mpz_cmp( div1, n) == 0 );
 
 			mpz_set_str( n, "498484841891891897", 10 );
 			FactorLib::FactorLib::QuadraticSieve( div1, div2, n );
 			Assert::IsFalse( mpz_cmp( div1, n ) == 0 );
+			Assert::IsFalse( mpz_cmp( div2, n ) == 0 );
 			mpz_mul( div1, div1, div2 );
 			Assert::IsTrue( mpz_cmp( div1, n) == 0 );
 
 			mpz_set_str( n, "484987897984984949898498945", 10 );
 			FactorLib::FactorLib::QuadraticSieve( div1, div2, n );
 			Assert::IsFalse( mpz_cmp( div1, n ) == 0 );
+			Assert::IsFalse( mpz_cmp( div2, n ) == 0 );
 			mpz_mul( div1, div1, div2 );
 			Assert::IsTrue( mpz_cmp( div1, n) == 0 );
 
 			mpz_set_str( n, "993474687978897714878978987989", 10  );
 			FactorLib::FactorLib::QuadraticSieve( div1, div2, n );
 			Assert::IsFalse( mpz_cmp( div1, n ) == 0 );
+			Assert::IsFalse( mpz_cmp( div2, n ) == 0 );
 			mpz_mul( div1, div1, div2 );
 			Assert::IsTrue( mpz_cmp( div1, n) == 0 );
 
