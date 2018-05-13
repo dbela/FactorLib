@@ -2,7 +2,6 @@
 #include <math.h>
 #include <chrono>
 #include <iostream>
-#include <algorithm>
 
 
 int iSmoothNumbersArraySize;
@@ -12,6 +11,12 @@ namespace FactorLib
 
 	void FactorLib::GCD( mpz_t out, mpz_t a, mpz_t b )
 	{
+		if( mpz_cmp_ui( a, 0 ) == 0 && mpz_cmp_ui( b, 0) == 0)
+		{
+			mpz_set_ui( out, 0 );
+			return;
+		}
+
 		mpz_t tmpA, tmpB, tmpSwap;
 		mpz_init( tmpA );
 		mpz_init( tmpB );
@@ -578,7 +583,7 @@ namespace FactorLib
 		}
 	}
 
-	double FactorLib::GetT(mpz_t n)
+	double FactorLib::QSieveGetT(mpz_t n)
 	{
 		int size = (int)mpz_sizeinbase( n, 10 );
 		if (size < 30)
@@ -658,7 +663,7 @@ namespace FactorLib
 		mpz_t *arrSieve = new mpz_t[baseSize];
 
 		double Target   = (mpz_sizeinbase( n, 10 ) - 1 )/2 + log10(size);
-		double CloseNUF = Target - GetT( n )*log10(FactorBase[FactorBase.size()-1]);
+		double CloseNUF = Target - QSieveGetT( n )*log10(FactorBase[FactorBase.size()-1]);
 
 		for( int i = 0; i < baseSize; ++i )
 		{
@@ -840,7 +845,7 @@ namespace FactorLib
 		return vecFactorsMod2;
 	}
 
-	void FactorLib::GetMultiplier(mpz_t nMultiplier, mpz_t n)
+	void FactorLib::QSieveGetMultiplier(mpz_t nMultiplier, mpz_t n)
 	{
 		mpz_t mod8;
 		mpz_init( mod8 );
@@ -867,7 +872,7 @@ namespace FactorLib
 		mpz_clear( mod8 );
 	}
 
-	void FactorLib::GetFactorBase(std::vector<long> &FactorBase, mpz_t n, uLongLong B)
+	void FactorLib::QSieveGetFactorBase(std::vector<long> &FactorBase, mpz_t n, uLongLong B)
 	{
 		uLongLong vecSize = LesserPrimesCount( B );
 
@@ -901,7 +906,7 @@ namespace FactorLib
 		}
 	}
 
-	uLongLong FactorLib::GetB( mpz_t n )
+	uLongLong FactorLib::QSieveGetB( mpz_t n )
 	{
 		size_t size = mpz_sizeinbase( n, 10 );
 
@@ -940,7 +945,7 @@ namespace FactorLib
 		return 0;
 	}
 
-	uLongLong FactorLib::GetSize( mpz_t n )
+	uLongLong FactorLib::QSieveGetSize( mpz_t n )
 	{
 		size_t size = mpz_sizeinbase( n, 10 );
 		
@@ -996,8 +1001,8 @@ namespace FactorLib
 		bool IsSelfInitialized = false;
 		if( B == 0 || size == 0 )
 		{
-			size = GetSize( n );
-			B = GetB( n );
+			size = QSieveGetSize( n );
+			B = QSieveGetB( n );
 			IsSelfInitialized = true;
 		}
 
@@ -1016,7 +1021,7 @@ namespace FactorLib
 		mpz_t nMultiplier;
 		mpz_init( nMultiplier );
 
-		GetMultiplier( nMultiplier, n );
+		QSieveGetMultiplier( nMultiplier, n );
 
 		std::vector<long> FactorBase;
 
@@ -1032,7 +1037,7 @@ namespace FactorLib
 			vecFactors.clear();
 			FactorBase.clear();
 		
-			GetFactorBase( FactorBase, nMultiplier, B );
+			QSieveGetFactorBase( FactorBase, nMultiplier, B );
 
 			if( FactorBase.size() < 3 )
 				return std::pair<uLongLong, int>( 0, 0 );
@@ -1059,7 +1064,7 @@ namespace FactorLib
 			else
 				break;
 
-			if( B > GetB( n ) * 5 || size > GetSize( n ) * 5 )
+			if( B > QSieveGetB( n ) * 5 || size > QSieveGetSize( n ) * 5 )
 				break;
 		}
 

@@ -74,7 +74,7 @@ namespace FactorLib
 										      						          
 			static bool                           CanBeFactoredOnBase( std::vector<uLongLong> &vecFactor, std::vector<long> &FactorBase, mpz_t n );
 										          
-			static double                         GetT( mpz_t n );                 
+			static double                         QSieveGetT( mpz_t n );                 
 
 			static void                           SieveOfQCheckNumber( mpz_t* smoothBases, mpz_t *arrSieve, std::vector<std::vector<uLongLong> > &vecFactors,std::vector<long> &FactorBase, std::vector<float> &vecCheck, mpz_t LowerBound, mpz_t n, double CloseNUF, int start, int add);
 			
@@ -88,15 +88,15 @@ namespace FactorLib
 
 			static std::vector<std::vector<int> > GetBinaryMatrix( std::vector<std::vector<uLongLong> > vecFactors );
 
-			static void                           GetMultiplier( mpz_t nMultiplier, mpz_t n );
+			static void                           QSieveGetMultiplier( mpz_t nMultiplier, mpz_t n );
 										          
-			static void                           GetFactorBase( std::vector<long> &FactorBase, mpz_t n, uLongLong B );
+			static void                           QSieveGetFactorBase( std::vector<long> &FactorBase, mpz_t n, uLongLong B );
 
 			static void                           FailedSieve( uLongLong &B, uLongLong &size, mpz_t n );
 
-			static uLongLong                      GetB( mpz_t n );
+			static uLongLong                      QSieveGetB( mpz_t n );
 			
-			static uLongLong                      GetSize( mpz_t n );
+			static uLongLong                      QSieveGetSize( mpz_t n );
 										          
 			static std::pair<uLongLong,int>       QuadraticSieve( mpz_t div1, mpz_t div2, mpz_t n, uLongLong B = 0, uLongLong size = 0 );
 
